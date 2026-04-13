@@ -1,5 +1,7 @@
 # Onboarding Orchestrator
 
+Репозиторий: [github.com/zhoochok1-netizen/Onboarding-Orchestrator](https://github.com/zhoochok1-netizen/Onboarding-Orchestrator)
+
 Веб-сервис для координации адаптации новых сотрудников: единая картина онбординга для HR, участников процесса и новичка.
 
 ---
@@ -115,7 +117,7 @@ REACT_APP_API_URL=http://127.0.0.1:8000 npm start
 ## Структура репозитория
 
 ```
-testing/
+Onboarding-Orchestrator/
 ├── backend/          # FastAPI, мок-данные, эндпоинты /api/...
 ├── frontend/         # React-приложение
 ├── README.md
