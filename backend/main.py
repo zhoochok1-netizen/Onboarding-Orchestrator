@@ -245,15 +245,28 @@ def ask_knowledge(body: dict):
 
 # ── Chatbot ────────────────────────────────────────────────
 
+def _fmt_task(t) -> str:
+    """Format task for AI context with ID for linking."""
+    return f"  - TASK_ID={t.id} title=\"{t.title}\" deadline={t.deadline} assignee=\"{t.assigned_to_name}\" stage=\"{t.stage_name}\""
+
+
+def _fmt_onb(o) -> str:
+    """Format onboarding for AI context with ID for linking."""
+    o_overdue = sum(1 for t in o.tasks if t.status == TaskStatus.OVERDUE)
+    o_done = sum(1 for t in o.tasks if t.status == TaskStatus.COMPLETED)
+    return (f"  - ONB_ID={o.id} name=\"{o.newcomer_name}\" role=\"{o.template_role}\" "
+            f"progress={o.progress}% stage=\"{o.current_stage}\" tasks={o_done}/{len(o.tasks)}"
+            + (f" OVERDUE={o_overdue}" if o_overdue else ""))
+
+
 def _build_user_context(emp: Optional[Employee]) -> str:
     if not emp:
         return ""
 
     lines = [
-        f"Текущий пользователь: {emp.full_name}",
-        f"Роль: {emp.role.value}",
-        f"Отдел: {emp.department}",
-        f"Email: {emp.email}",
+        f"user: {emp.full_name} | role: {emp.role.value} | dept: {emp.department}",
+        "",
+        "LINK FORMAT REMINDER: use [Title](task:TASK_ID) and [Name](onboarding:ONB_ID)",
     ]
 
     if emp.role == Role.NEWCOMER:
@@ -261,42 +274,74 @@ def _build_user_context(emp: Optional[Employee]) -> str:
             if o.newcomer_id == emp.id:
                 pending = [t for t in o.tasks if t.status in (TaskStatus.WAITING, TaskStatus.IN_PROGRESS)]
                 overdue = [t for t in o.tasks if t.status == TaskStatus.OVERDUE]
-                lines.append(f"\nОнбординг: {o.template_role}")
-                lines.append(f"Текущий этап: {o.current_stage}")
-                lines.append(f"Прогресс: {o.progress}%")
-                if pending:
-                    lines.append("Текущие задачи:")
-                    for t in pending[:10]:
-                        lines.append(f"  - {t.title} ({t.status.value}, дедлайн: {t.deadline}, ответственный: {t.assigned_to_name})")
+                completed = [t for t in o.tasks if t.status == TaskStatus.COMPLETED]
+                lines.append(f"\nONBOARDING: ONB_ID={o.id} role={o.template_role} stage=\"{o.current_stage}\" progress={o.progress}% ({len(completed)}/{len(o.tasks)})")
                 if overdue:
-                    lines.append("Просроченные задачи:")
-                    for t in overdue[:5]:
-                        lines.append(f"  - {t.title} (просрочено, дедлайн: {t.deadline})")
+                    lines.append(f"\nOVERDUE ({len(overdue)}):")
+                    for t in overdue:
+                        lines.append(_fmt_task(t))
+                if pending:
+                    lines.append(f"\nIN_PROGRESS ({len(pending)}):")
+                    for t in pending:
+                        lines.append(_fmt_task(t))
                 break
+
     elif _is_hr(emp):
-        lines.append(f"\nАктивных онбордингов: {len(onboardings)}")
-        lines.append(f"Всего задач: {len(all_tasks)}")
-        overdue_count = sum(1 for t in all_tasks if t.status == TaskStatus.OVERDUE)
-        if overdue_count:
-            lines.append(f"Просроченных задач: {overdue_count}")
-    elif emp.role == Role.MANAGER:
-        dept_onboardings = [o for o in onboardings if _newcomer_department(o.newcomer_id) == emp.department]
-        dept_tasks = [t for t in all_tasks if _newcomer_department(t.newcomer_id) == emp.department]
-        lines.append(f"\nОтдел: {emp.department}")
-        lines.append(f"Онбордингов в отделе: {len(dept_onboardings)}")
-        lines.append(f"Задач в отделе: {len(dept_tasks)}")
-        overdue_count = sum(1 for t in dept_tasks if t.status == TaskStatus.OVERDUE)
-        if overdue_count:
-            lines.append(f"Просроченных задач: {overdue_count}")
-    else:
+        total = len(all_tasks)
+        done = sum(1 for t in all_tasks if t.status == TaskStatus.COMPLETED)
+        overdue_tasks = [t for t in all_tasks if t.status == TaskStatus.OVERDUE]
+        lines.append(f"\nSTATS: {len(onboardings)} onboardings, {total} tasks, {done} done, {len(overdue_tasks)} overdue")
+
+        lines.append(f"\nONBOARDINGS:")
+        for o in onboardings:
+            lines.append(_fmt_onb(o))
+
+        if overdue_tasks:
+            lines.append(f"\nALL OVERDUE TASKS ({len(overdue_tasks)}):")
+            for t in overdue_tasks:
+                lines.append(f"  - TASK_ID={t.id} title=\"{t.title}\" newcomer=\"{t.newcomer_name}\" ONB_ID={t.onboarding_id} deadline={t.deadline} assignee=\"{t.assigned_to_name}\"")
+
         my_tasks = [t for t in all_tasks if t.assigned_to == emp.id]
-        if my_tasks:
-            lines.append(f"\nНазначенных задач: {len(my_tasks)}")
-            pending = [t for t in my_tasks if t.status in (TaskStatus.WAITING, TaskStatus.IN_PROGRESS)]
-            if pending:
-                lines.append("Мои задачи:")
-                for t in pending[:10]:
-                    lines.append(f"  - {t.title} (новичок: {t.newcomer_name}, дедлайн: {t.deadline})")
+        my_pending = [t for t in my_tasks if t.status in (TaskStatus.WAITING, TaskStatus.IN_PROGRESS)]
+        my_overdue = [t for t in my_tasks if t.status == TaskStatus.OVERDUE]
+        if my_pending or my_overdue:
+            lines.append(f"\nMY TASKS ({len(my_tasks)} total, {len(my_pending)} active, {len(my_overdue)} overdue):")
+            for t in (my_overdue + my_pending):
+                lines.append(f"  - TASK_ID={t.id} title=\"{t.title}\" newcomer=\"{t.newcomer_name}\" ONB_ID={t.onboarding_id} deadline={t.deadline} status={t.status.value}")
+
+    elif emp.role == Role.MANAGER:
+        dept = emp.department
+        dept_onbs = [o for o in onboardings if _newcomer_department(o.newcomer_id) == dept]
+        my_tasks = [t for t in all_tasks if t.assigned_to == emp.id]
+        my_pending = [t for t in my_tasks if t.status in (TaskStatus.WAITING, TaskStatus.IN_PROGRESS)]
+        my_overdue = [t for t in my_tasks if t.status == TaskStatus.OVERDUE]
+
+        lines.append(f"\nDEPT ONBOARDINGS ({len(dept_onbs)}):")
+        for o in dept_onbs:
+            lines.append(_fmt_onb(o))
+
+        if my_pending or my_overdue:
+            lines.append(f"\nMY TASKS ({len(my_tasks)} total, {len(my_overdue)} overdue):")
+            for t in (my_overdue + my_pending):
+                lines.append(f"  - TASK_ID={t.id} title=\"{t.title}\" newcomer=\"{t.newcomer_name}\" ONB_ID={t.onboarding_id} deadline={t.deadline} status={t.status.value}")
+
+    else:  # IT, Mentor
+        my_tasks = [t for t in all_tasks if t.assigned_to == emp.id]
+        my_pending = [t for t in my_tasks if t.status in (TaskStatus.WAITING, TaskStatus.IN_PROGRESS)]
+        my_overdue = [t for t in my_tasks if t.status == TaskStatus.OVERDUE]
+        my_done = [t for t in my_tasks if t.status == TaskStatus.COMPLETED]
+
+        lines.append(f"\nMY TASKS ({len(my_tasks)} total, {len(my_done)} done, {len(my_pending)} active, {len(my_overdue)} overdue):")
+        for t in (my_overdue + my_pending):
+            lines.append(f"  - TASK_ID={t.id} title=\"{t.title}\" newcomer=\"{t.newcomer_name}\" ONB_ID={t.onboarding_id} deadline={t.deadline} status={t.status.value}")
+
+        if emp.role == Role.MENTOR:
+            my_newcomer_ids = set(t.newcomer_id for t in my_tasks)
+            my_onbs = [o for o in onboardings if o.newcomer_id in my_newcomer_ids]
+            if my_onbs:
+                lines.append(f"\nMY NEWCOMERS:")
+                for o in my_onbs:
+                    lines.append(_fmt_onb(o))
 
     return "\n".join(lines)
 
@@ -306,29 +351,183 @@ def chat(request: Request, message: dict):
     user_text = message.get("message", "").strip()
     chat_history.append(ChatMessage(role="user", content=user_text, timestamp=datetime.now()))
 
+    emp = _get_current_user(request)
+
     if settings.gateway_token:
-        emp = _get_current_user(request)
         user_ctx = _build_user_context(emp)
         knowledge_ctx = _build_knowledge_context()
         response = chat_with_context(user_text, user_ctx, knowledge_ctx)
     else:
-        response = _mock_chat_response(user_text)
+        response = _mock_chat_response(user_text, emp)
 
     chat_history.append(ChatMessage(role="assistant", content=response, timestamp=datetime.now()))
     return {"response": response}
 
 
-def _mock_chat_response(user_text: str) -> str:
-    MOCK_RESPONSES = {
-        "привет": "Привет! 👋 Я ваш помощник по онбордингу. Чем могу помочь?",
-        "задачи": "Для просмотра задач перейдите в раздел «Доска задач».",
-        "график": "📅 Пн-Пт: 09:00 — 18:00, гибкое начало 08:00-10:00.\n\nИсточник: ПВТР",
-    }
+def _mock_chat_response(user_text: str, emp: Optional[Employee] = None) -> str:
     user_lower = user_text.lower()
-    for key, val in MOCK_RESPONSES.items():
+
+    # --- Задачи (контекстный ответ) ---
+    if any(kw in user_lower for kw in ["задач", "что делать", "что мне", "мои дела", "нужно сделать", "to do"]):
+        return _mock_tasks_answer(emp)
+
+    # --- Просрочки ---
+    if any(kw in user_lower for kw in ["просрочен", "overdue", "опоздан", "дедлайн"]):
+        return _mock_overdue_answer(emp)
+
+    # --- Онбординг / прогресс ---
+    if any(kw in user_lower for kw in ["прогресс", "онбординг", "как дела", "статус", "этап"]):
+        return _mock_progress_answer(emp)
+
+    STATIC_RESPONSES = {
+        "привет": "Привет! 👋 Я ваш AI-помощник по онбордингу.\n\nЯ могу помочь с:\n- **Задачами** — расскажу что нужно сделать\n- **Прогрессом** — покажу статус онбордингов\n- **Документами** — найду информацию в [Базе знаний](/knowledge)\n- **Процессами** — объясню как всё устроено\n\nПросто спросите!",
+        "график": "## Рабочий график\n\n| | |\n|---|---|\n| **Рабочие дни** | Пн — Пт |\n| **Часы** | 09:00 — 18:00 |\n| **Гибкое начало** | 08:00 — 10:00 |\n| **Обед** | 1 час (12:00 — 14:00) |\n| **Удалёнка** | До 2 дней в неделю |\n\nПодробнее об удалённой работе — в [Базе знаний](/knowledge) (документ «Политика удалённой работы»).\n\n> 📄 Источник: Правила внутреннего трудового распорядка (ПВТР)",
+        "vpn": "## Настройка VPN\n\n1. Обратитесь в IT: **Дмитрий Козлов** (dmitry@company.ru) или **Артём Черных** (artem@company.ru)\n2. VPN **обязателен** при работе вне офиса\n3. Настройка — в первый рабочий день\n\n> 📄 Источник: [База знаний](/knowledge) — ЛНА «Информационная безопасность»",
+        "доступ": "## Как получить доступы\n\n1. Все запросы — через **Jira Service Desk** (sd.company.ru)\n2. Категория: «Запрос доступа»\n3. Укажите: систему, тип доступа, обоснование\n4. Согласование: руководитель → IT\n\n**Стандартные доступы** (день 1): AD, почта, Slack, Jira, Confluence, VPN\n\n**Сроки:** стандартные — 1 день, доп. — до 3 дней, production — до 5 дней\n\n> 📄 Источник: [База знаний](/knowledge) — СОП «Запрос и получение доступов»",
+        "git": "## Работа с Git\n\n- **Репозиторий:** GitLab (gitlab.company.ru)\n- **Ветвление:** Git Flow (`feature/`, `bugfix/`, `release/`)\n- **Code review:** минимум **2 approve** для merge в main\n- **CI/CD:** GitLab CI — staging автоматически, production через MR\n\n> 📄 Источник: [База знаний](/knowledge) — Гайд по инструментам разработки",
+        "отпуск": "## Отпуска и больничные\n\n| | |\n|---|---|\n| **Ежегодный отпуск** | 28 дней |\n| **Заявление** | За 14 дней |\n| **Больничный** | С первого дня |\n\nОформление через HR-портал. Уведомите руководителя!\n\n> 📄 Источник: [База знаний](/knowledge) — ПВТР",
+        "crm": "## CRM Bitrix24\n\n- **Вход:** crm.company.ru (SSO)\n- **Воронка:** Лид → Квалификация → Демо → КП → Переговоры → Закрытие\n- **KPI:** конверсия > 15%\n- **Правила:** все звонки в CRM, комментарии обязательны\n\n> 📄 Источник: [База знаний](/knowledge) — Гайд по CRM Bitrix24",
+        "figma": "## Дизайн-система UI Kit v3\n\n- **Библиотека:** figma.com/company-ui-kit-v3\n- **Цвета:** Primary #6366F1, Secondary #A855F7\n- **Шрифт:** Inter, 400-800\n- **Иконки:** Lucide Icons\n- Все макеты — **только на основе UI Kit**\n\n> 📄 Источник: [База знаний](/knowledge) — Дизайн-система UI Kit v3",
+        "дмс": "## ДМС и компенсации\n\n**ДМС** (после испытательного срока):\n- Страховая: «Ингосстрах»\n- Покрытие: амбулаторное, стоматология, госпитализация\n- Для сотрудника: **бесплатно**\n\n**Компенсации:**\n- 🍽️ Обеды: 500 руб/день\n- 🏋️ Спорт: до 5 000 руб/мес\n- 📚 Обучение: до 50 000 руб/квартал\n- 🇬🇧 Английский: 2 раза в неделю\n\n> 📄 Источник: [База знаний](/knowledge) — Гайд по ДМС и компенсациям",
+        "jira": "## Работа с Jira\n\n**Доступ:** jira.company.ru (SSO)\n\n**Workflow:** Backlog → To Do → In Progress → Code Review → QA → Done\n\n**Правила:**\n- Описание + критерии приёмки обязательны\n- Оценка в story points (Фибоначчи)\n- Логирование времени обязательно\n\n> 📄 Источник: [База знаний](/knowledge) — Гайд по работе с Jira",
+        "встреч": "## Командные встречи\n\n| Встреча | Когда | Длительность |\n|---------|-------|-------|\n| **Daily standup** | Ежедневно, 10:00 | 15 мин |\n| **Sprint planning** | Понедельник | 1 час |\n| **Sprint demo** | Пятница | 30 мин |\n| **Ретро** | Раз в 2 недели | 1 час |\n| **1-на-1** | Еженедельно | 30 мин |\n| **All-hands** | 1-й понедельник месяца | 1 час |\n\n> 📄 Источник: [База знаний](/knowledge) — СОП «Встречи и командные ритуалы»",
+        "slack": "## Коммуникации в Slack\n\n**Каналы:**\n- `#general` — объявления\n- `#dev` / `#marketing` / `#sales` / `#design` — отделы\n- `#security` — инциденты\n- `#helpdesk` — IT-запросы\n- `#random` — неформальное\n\n**Правила:** ответ в течение **2 часов**, статус при уходе/удалёнке.\n\n> 📄 Источник: [База знаний](/knowledge) — Гайд по корпоративным коммуникациям",
+        "безопасност": "## Информационная безопасность\n\n- 🔐 **2FA** обязательна для всех систем\n- 🔑 Пароли: мин. 12 символов, смена каждые 90 дней\n- 📡 **VPN** обязателен вне офиса\n- 🚨 Инциденты: security@company.ru или `#security` в Slack\n\n> 📄 Источник: [База знаний](/knowledge) — ЛНА «Информационная безопасность»",
+        "удалён": "## Удалённая работа\n\n- До **2 дней в неделю** по согласованию\n- Согласование за **1 день**\n- Доступность: **10:00 — 17:00**\n- VPN обязателен\n- Ответ в Slack — в течение **30 минут**\n\n**Полная удалёнка** — доп. соглашение + компенсация 5 000 руб/мес.\n\n> 📄 Источник: [База знаний](/knowledge) — ЛНА «Политика удалённой работы»",
+    }
+
+    for key, val in STATIC_RESPONSES.items():
         if key in user_lower:
             return val
-    return "AI-помощник сейчас недоступен (токен не настроен). Обратитесь к HR."
+
+    return ("Я пока работаю в демо-режиме (AI-модель не подключена). "
+            "Могу ответить на вопросы о:\n\n"
+            "- **Задачах** — «что мне нужно сделать?»\n"
+            "- **Прогрессе** — «какой у меня прогресс?»\n"
+            "- **Процессах** — график, VPN, доступы, Git, Jira, Slack\n"
+            "- **Компенсациях** — ДМС, обеды, спорт, обучение\n"
+            "- **Встречах** — стендапы, ретро, 1-на-1\n\n"
+            "Или загляните в [Базу знаний](/knowledge) — там 15 документов.\n\n"
+            "Для подключения AI настройте `GATEWAY_TOKEN` в `.env` файле.")
+
+
+def _task_link(t) -> str:
+    """Generate a special task link: [Title](task:task-id)"""
+    return f"[{t.title}](task:{t.id})"
+
+
+def _onb_link(o) -> str:
+    """Generate onboarding link: [Name](onboarding:onb-id)"""
+    return f"[{o.newcomer_name}](onboarding:{o.id})"
+
+
+def _mock_tasks_answer(emp: Optional[Employee]) -> str:
+    if not emp:
+        return "Не удалось определить пользователя."
+
+    if emp.role == Role.NEWCOMER:
+        for o in onboardings:
+            if o.newcomer_id == emp.id:
+                pending = [t for t in o.tasks if t.status in (TaskStatus.WAITING, TaskStatus.IN_PROGRESS)]
+                overdue = [t for t in o.tasks if t.status == TaskStatus.OVERDUE]
+                completed = [t for t in o.tasks if t.status == TaskStatus.COMPLETED]
+                lines = [f"**{o.current_stage}** · {o.progress}% · {len(completed)}/{len(o.tasks)} задач\n"]
+                if overdue:
+                    lines.append(f"⚠️ **Просрочено ({len(overdue)}):**")
+                    for t in overdue:
+                        lines.append(f"- {_task_link(t)} — до {t.deadline}")
+                if pending:
+                    lines.append(f"\n🔄 **В работе ({len(pending)}):**")
+                    for t in pending:
+                        lines.append(f"- {_task_link(t)} — до {t.deadline}, отв. {t.assigned_to_name}")
+                return "\n".join(lines)
+        return "Активный онбординг не найден."
+
+    my_tasks = [t for t in all_tasks if t.assigned_to == emp.id]
+    if not my_tasks:
+        return "У вас нет назначенных задач. ✅"
+
+    my_pending = [t for t in my_tasks if t.status in (TaskStatus.WAITING, TaskStatus.IN_PROGRESS)]
+    my_overdue = [t for t in my_tasks if t.status == TaskStatus.OVERDUE]
+    my_completed = [t for t in my_tasks if t.status == TaskStatus.COMPLETED]
+
+    lines = [f"**{len(my_completed)}** выполнено · **{len(my_pending)}** в работе · **{len(my_overdue)}** просрочено\n"]
+
+    if my_overdue:
+        lines.append(f"⚠️ **Просрочено:**")
+        for t in my_overdue:
+            lines.append(f"- {_task_link(t)} → {_onb_link(_find_onb(t.onboarding_id))} · до {t.deadline}")
+
+    if my_pending:
+        lines.append(f"\n🔄 **В работе:**")
+        for t in my_pending[:8]:
+            lines.append(f"- {_task_link(t)} → {_onb_link(_find_onb(t.onboarding_id))} · до {t.deadline}")
+        if len(my_pending) > 8:
+            lines.append(f"- ...и ещё {len(my_pending) - 8} задач → [Доска задач](/tasks)")
+
+    return "\n".join(lines)
+
+
+def _mock_overdue_answer(emp: Optional[Employee]) -> str:
+    if not emp:
+        return "Не удалось определить пользователя."
+
+    if _is_hr(emp):
+        overdue = [t for t in all_tasks if t.status == TaskStatus.OVERDUE]
+        if not overdue:
+            return "✅ Просроченных задач нет."
+        lines = [f"⚠️ **{len(overdue)} просроченных задач:**\n"]
+        for t in overdue:
+            lines.append(f"- {_task_link(t)} → {_onb_link(_find_onb(t.onboarding_id))} · отв. **{t.assigned_to_name}** · до {t.deadline}")
+        lines.append(f"\nОбновить статусы → [Доска задач](/tasks)")
+        return "\n".join(lines)
+
+    my_overdue = [t for t in all_tasks if t.assigned_to == emp.id and t.status == TaskStatus.OVERDUE]
+    if not my_overdue:
+        return "✅ У вас нет просроченных задач."
+    lines = [f"⚠️ **{len(my_overdue)} просроченных:**\n"]
+    for t in my_overdue:
+        lines.append(f"- {_task_link(t)} → {_onb_link(_find_onb(t.onboarding_id))} · до {t.deadline}")
+    return "\n".join(lines)
+
+
+def _mock_progress_answer(emp: Optional[Employee]) -> str:
+    if not emp:
+        return "Не удалось определить пользователя."
+
+    if emp.role == Role.NEWCOMER:
+        for o in onboardings:
+            if o.newcomer_id == emp.id:
+                completed = sum(1 for t in o.tasks if t.status == TaskStatus.COMPLETED)
+                overdue = sum(1 for t in o.tasks if t.status == TaskStatus.OVERDUE)
+                status = "⚠️" if overdue else "✅"
+                return (
+                    f"**{o.progress}%** · {completed}/{len(o.tasks)} задач · этап «{o.current_stage}»\n\n"
+                    f"{status} {'Просрочено: ' + str(overdue) + ' задач' if overdue else 'Всё по плану'}\n\n"
+                    f"Подробнее → [Мой онбординг](/onboardings/{o.id})"
+                )
+        return "Активный онбординг не найден."
+
+    if _is_hr(emp):
+        total = len(all_tasks)
+        done = sum(1 for t in all_tasks if t.status == TaskStatus.COMPLETED)
+        overdue = sum(1 for t in all_tasks if t.status == TaskStatus.OVERDUE)
+        pct = round(done / total * 100) if total else 0
+        lines = [f"**{len(onboardings)}** онбордингов · **{pct}%** выполнено · **{overdue}** просрочено\n"]
+        for o in onboardings:
+            o_overdue = sum(1 for t in o.tasks if t.status == TaskStatus.OVERDUE)
+            icon = "🔴" if o_overdue else ("🟡" if o.progress < 50 else "🟢")
+            lines.append(f"- {icon} {_onb_link(o)} · {o.template_role} · {o.progress}% · «{o.current_stage}»")
+        return "\n".join(lines)
+
+    return "Перейдите на [Дашборд](/dashboard) для просмотра прогресса."
+
+
+def _find_onb(onboarding_id: str):
+    for o in onboardings:
+        if o.id == onboarding_id:
+            return o
+    return None
 
 
 @app.get("/api/chat/history")
