@@ -303,6 +303,16 @@
   border-bottom-color: var(--primary);
 }
 
+.chat-entity-doc {
+  color: var(--yellow);
+  border-bottom-color: var(--yellow);
+}
+
+.chat-entity-doc:hover {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
 /* ── Detail modal ── */
 .detail-modal {
   width: 100%;
@@ -416,4 +426,40 @@
   color: var(--text-muted);
   font-size: 0.75rem;
   white-space: nowrap;
+}
+
+/* ── Knowledge modal ── */
+.dm-knowledge {
+  max-width: 640px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-doc-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .dm-doc-meta {
+  border-bottom-color: #e2e8f0;
+}
+
+.dm-doc-content {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.dm-doc-content pre {
+  font-family: inherit;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
 }

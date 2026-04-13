@@ -5,7 +5,7 @@ import { useUser } from '../context/UserContext';
 import './Dashboard.css';
 
 export default function Dashboard() {
-  const { user } = useUser();
+  const { user, isHR } = useUser();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -21,7 +21,15 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="page-header">
         <h1>Дашборд</h1>
-        <p>Обзор всех активных онбордингов и SLA</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p>Обзор всех активных онбордингов и SLA</p>
+          {isHR && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Link to="/onboardings" className="btn btn-outline">🚀 Онбординги</Link>
+              <Link to="/templates" className="btn btn-outline">📋 Шаблоны</Link>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="stats-grid">

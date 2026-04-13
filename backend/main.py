@@ -9,9 +9,13 @@ from mock_data import (
     knowledge_docs, chat_history,
 )
 from ai_client import chat_with_context, search_knowledge_with_ai
+from rag import RAGPipeline
 from config import settings
 
 app = FastAPI(title="Onboarding Orchestrator API", version="1.0.0")
+
+# Initialize RAG pipeline
+rag = RAGPipeline(knowledge_docs)
 
 app.add_middleware(
     CORSMiddleware,
@@ -184,7 +188,7 @@ def get_me(request: Request):
 def _build_knowledge_context() -> str:
     parts = []
     for d in knowledge_docs:
-        parts.append(f"### {d.title} (категория: {d.category})\n{d.content.strip()}")
+        parts.append(f"### DOC_ID={d.id} \"{d.title}\" (категория: {d.category})\n{d.content.strip()}")
     return "\n\n---\n\n".join(parts)
 
 
@@ -193,21 +197,10 @@ def get_knowledge(q: str | None = Query(None)):
     if not q:
         return [{"id": d.id, "title": d.title, "category": d.category, "uploaded_by": d.uploaded_by, "uploaded_at": d.uploaded_at.isoformat()} for d in knowledge_docs]
 
-    q_lower = q.lower()
-    results = []
-    for d in knowledge_docs:
-        if q_lower in d.title.lower() or q_lower in d.content.lower():
-            lines = d.content.strip().split("\n")
-            relevant = [l.strip() for l in lines if q_lower in l.lower()]
-            snippet = "\n".join(relevant[:5]) if relevant else lines[0]
-            results.append({
-                "id": d.id,
-                "title": d.title,
-                "category": d.category,
-                "snippet": snippet,
-                "source": d.title,
-            })
+    # RAG-based search with TF-IDF scoring
+    results = rag.search(q, top_k=5)
 
+    # If RAG found nothing and AI is available — ask AI
     if settings.gateway_token and not results:
         ai_answer = search_knowledge_with_ai(q, _build_knowledge_context())
         results.append({
@@ -219,6 +212,12 @@ def get_knowledge(q: str | None = Query(None)):
         })
 
     return results
+
+
+@app.get("/api/rag/stats")
+def get_rag_stats():
+    """RAG pipeline statistics."""
+    return rag.stats
 
 
 @app.get("/api/knowledge/{doc_id}")
@@ -355,7 +354,8 @@ def chat(request: Request, message: dict):
 
     if settings.gateway_token:
         user_ctx = _build_user_context(emp)
-        knowledge_ctx = _build_knowledge_context()
+        # RAG: retrieve only relevant chunks instead of full knowledge base
+        knowledge_ctx = rag.build_context(user_text, top_k=5)
         response = chat_with_context(user_text, user_ctx, knowledge_ctx)
     else:
         response = _mock_chat_response(user_text, emp)

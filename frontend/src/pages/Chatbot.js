@@ -127,11 +127,40 @@ function OnboardingDetailModal({ onboardingId, onClose }) {
   );
 }
 
-function MarkdownMessage({ content, onTaskClick, onOnboardingClick }) {
-  // Preprocess: convert task:/onboarding: links to data-attributes on <a> with safe hrefs
+function KnowledgeModal({ docId, onClose }) {
+  const [doc, setDoc] = useState(null);
+
+  useEffect(() => {
+    api.getDocument(docId).then(setDoc);
+  }, [docId]);
+
+  if (!doc) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="detail-modal dm-knowledge" onClick={(e) => e.stopPropagation()}>
+        <div className="detail-modal-header">
+          <h2>{doc.title}</h2>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div className="dm-doc-meta">
+          <span className="badge badge-primary">{doc.category}</span>
+          <span>Загрузил: {doc.uploaded_by}</span>
+        </div>
+        <div className="dm-doc-content">
+          <pre>{doc.content}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MarkdownMessage({ content, onTaskClick, onOnboardingClick, onKnowledgeClick }) {
+  // Preprocess: convert special protocol links to safe hash-based hrefs
   const processed = content
     .replace(/\[([^\]]+)\]\(task:([^)]+)\)/g, '[$1](#task--$2)')
-    .replace(/\[([^\]]+)\]\(onboarding:([^)]+)\)/g, '[$1](#onb--$2)');
+    .replace(/\[([^\]]+)\]\(onboarding:([^)]+)\)/g, '[$1](#onb--$2)')
+    .replace(/\[([^\]]+)\]\(knowledge:([^)]+)\)/g, '[$1](#doc--$2)');
 
   const handleClick = (e) => {
     const link = e.target.closest('a');
@@ -145,6 +174,10 @@ function MarkdownMessage({ content, onTaskClick, onOnboardingClick }) {
       e.preventDefault();
       e.stopPropagation();
       onOnboardingClick(href.replace('#onb--', ''));
+    } else if (href.startsWith('#doc--')) {
+      e.preventDefault();
+      e.stopPropagation();
+      onKnowledgeClick(href.replace('#doc--', ''));
     }
   };
 
@@ -158,6 +191,9 @@ function MarkdownMessage({ content, onTaskClick, onOnboardingClick }) {
             }
             if (href && href.startsWith('#onb--')) {
               return <a href={href} className="chat-entity-link chat-entity-onb">{children}</a>;
+            }
+            if (href && href.startsWith('#doc--')) {
+              return <a href={href} className="chat-entity-link chat-entity-doc">{children}</a>;
             }
             if (href && href.startsWith('/')) {
               return <Link to={href} className="chat-link">{children}</Link>;
@@ -182,6 +218,7 @@ export default function Chatbot() {
   const [loading, setLoading] = useState(false);
   const [modalTask, setModalTask] = useState(null);
   const [modalOnb, setModalOnb] = useState(null);
+  const [modalDoc, setModalDoc] = useState(null);
   const messagesEnd = useRef(null);
 
   const suggestions = ROLE_SUGGESTIONS[user?.role] || ROLE_SUGGESTIONS.newcomer;
@@ -271,6 +308,7 @@ export default function Chatbot() {
                       content={msg.content}
                       onTaskClick={setModalTask}
                       onOnboardingClick={setModalOnb}
+                      onKnowledgeClick={setModalDoc}
                     />
                   ) : (
                     msg.content
@@ -316,6 +354,7 @@ export default function Chatbot() {
 
       {modalTask && <TaskDetailModal taskId={modalTask} onClose={() => setModalTask(null)} />}
       {modalOnb && <OnboardingDetailModal onboardingId={modalOnb} onClose={() => setModalOnb(null)} />}
+      {modalDoc && <KnowledgeModal docId={modalDoc} onClose={() => setModalDoc(null)} />}
     </div>
   );
 }
