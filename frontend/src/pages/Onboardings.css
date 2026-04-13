@@ -1,0 +1,70 @@
+.onboarding-list-card {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.onboarding-list-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--glass-shadow-hover);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.onb-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.onb-role {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.onb-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onb-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.84rem;
+}
+
+.onb-info-row span {
+  color: var(--text-secondary);
+}
+
+.onb-info-row strong {
+  font-weight: 600;
+}
+
+.onb-stats {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.onb-stat {
+  text-align: center;
+}
+
+.onb-stat-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  display: block;
+  letter-spacing: -0.02em;
+}
+
+.onb-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
