@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
 import './TopBar.css';
 
 const PAGE_TITLES = {
@@ -11,12 +12,23 @@ const PAGE_TITLES = {
   '/knowledge': { title: 'База знаний', subtitle: 'Документы компании' },
 };
 
+const ROLE_LABELS = {
+  hr: 'HR-менеджер',
+  manager: 'Руководитель',
+  it: 'IT-специалист',
+  mentor: 'Наставник',
+  newcomer: 'Новый сотрудник',
+};
+
 export default function TopBar() {
   const location = useLocation();
+  const { user, logout } = useUser();
   const [showProfile, setShowProfile] = useState(false);
 
   const basePath = '/' + location.pathname.split('/')[1];
   const page = PAGE_TITLES[basePath] || { title: 'Onboarding', subtitle: '' };
+
+  const initials = user?.full_name?.split(' ').map((n) => n[0]).join('') || '??';
 
   return (
     <header className="topbar">
@@ -45,10 +57,10 @@ export default function TopBar() {
         </button>
 
         <div className="topbar-profile" onClick={() => setShowProfile(!showProfile)}>
-          <div className="topbar-avatar">АС</div>
+          <div className="topbar-avatar">{initials}</div>
           <div className="topbar-user-info">
-            <span className="topbar-user-name">Анна Смирнова</span>
-            <span className="topbar-user-role">HR-менеджер</span>
+            <span className="topbar-user-name">{user?.full_name}</span>
+            <span className="topbar-user-role">{ROLE_LABELS[user?.role] || user?.role}</span>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`chevron ${showProfile ? 'open' : ''}`}>
             <polyline points="6 9 12 15 18 9" />
@@ -57,17 +69,20 @@ export default function TopBar() {
           {showProfile && (
             <div className="profile-dropdown">
               <div className="profile-dropdown-header">
-                <div className="topbar-avatar avatar-lg">АС</div>
+                <div className="topbar-avatar avatar-lg">{initials}</div>
                 <div>
-                  <div className="dropdown-name">Анна Смирнова</div>
-                  <div className="dropdown-email">anna@company.ru</div>
+                  <div className="dropdown-name">{user?.full_name}</div>
+                  <div className="dropdown-email">{user?.email}</div>
                 </div>
               </div>
               <div className="profile-dropdown-divider"></div>
-              <button className="dropdown-item">Профиль</button>
-              <button className="dropdown-item">Настройки</button>
+              <div className="dropdown-role-badge">
+                {ROLE_LABELS[user?.role]} · {user?.department}
+              </div>
               <div className="profile-dropdown-divider"></div>
-              <button className="dropdown-item dropdown-item-danger">Выйти</button>
+              <button className="dropdown-item dropdown-item-danger" onClick={(e) => { e.stopPropagation(); logout(); }}>
+                Сменить профиль
+              </button>
             </div>
           )}
         </div>

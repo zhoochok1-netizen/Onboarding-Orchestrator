@@ -1,10 +1,20 @@
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
+function getUserId() {
+  try {
+    const saved = localStorage.getItem('onboarding_user');
+    return saved ? JSON.parse(saved).id : null;
+  } catch {
+    return null;
+  }
+}
+
 async function request(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
+  const userId = getUserId();
+  const headers = { 'Content-Type': 'application/json' };
+  if (userId) headers['X-User-Id'] = userId;
+
+  const res = await fetch(`${API_BASE}${path}`, { headers, ...options });
   return res.json();
 }
 

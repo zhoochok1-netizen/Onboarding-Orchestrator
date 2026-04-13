@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { api } from '../api/client';
+import { useUser } from '../context/UserContext';
 import './Chatbot.css';
 
 const SUGGESTIONS = [
@@ -15,16 +16,20 @@ const SUGGESTIONS = [
   'Какой порядок отпуска?',
 ];
 
+const GREETING = 'Привет! 👋 Я ваш помощник по онбордингу. Могу ответить на вопросы о процессах компании, подсказать ваши текущие задачи или найти информацию в базе знаний. Чем могу помочь?';
+
 export default function Chatbot() {
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: 'Привет! 👋 Я ваш помощник по онбордингу. Могу ответить на вопросы о процессах компании, подсказать ваши текущие задачи или найти информацию в базе знаний. Чем могу помочь?',
-    },
-  ]);
+  const { user } = useUser();
+  const [messages, setMessages] = useState([{ role: 'assistant', content: GREETING }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEnd = useRef(null);
+
+  useEffect(() => {
+    setMessages([{ role: 'assistant', content: GREETING }]);
+    setInput('');
+    setLoading(false);
+  }, [user?.id]);
 
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });

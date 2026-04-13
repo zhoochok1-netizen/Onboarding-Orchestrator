@@ -225,3 +225,10 @@
   background: rgba(239, 68, 68, 0.08);
   color: var(--red);
 }
+
+.dropdown-role-badge {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}

@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
+import { useUser } from '../context/UserContext';
 import './Onboardings.css';
 
 export default function Onboardings() {
+  const { user } = useUser();
   const [onboardings, setOnboardings] = useState([]);
 
   useEffect(() => {
+    setOnboardings([]);
     api.getOnboardings().then(setOnboardings);
-  }, []);
+  }, [user?.id]);
 
   return (
     <div className="onboardings-page">
