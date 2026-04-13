@@ -53,9 +53,9 @@
 }
 
 .result-snippet {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 8px;
@@ -106,7 +106,7 @@
 .doc-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--modal-overlay);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
@@ -126,9 +126,11 @@
   max-width: 700px;
   max-height: 80vh;
   overflow-y: auto;
-  background: var(--glass-bg-strong);
+  background: var(--modal-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-hover);
+  box-shadow: var(--shadow-md);
   animation: slideUp 0.3s ease;
 }
 

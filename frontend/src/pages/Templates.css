@@ -63,16 +63,16 @@
   align-items: flex-start;
   gap: 10px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 0.85rem;
   transition: var(--transition);
 }
 
 .template-task:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-hover);
 }
 
 .task-role-icon {

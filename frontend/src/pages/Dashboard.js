@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
+import { useUser } from '../context/UserContext';
 import './Dashboard.css';
 
 export default function Dashboard() {
+  const { user } = useUser();
   const [data, setData] = useState(null);
 
   useEffect(() => {
+    setData(null);
     api.getDashboard().then(setData);
-  }, []);
+  }, [user?.id]);
 
   if (!data) return <div className="loading">Загрузка...</div>;
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { useUser } from '../context/UserContext';
 import './TaskBoard.css';
 
 const STATUS_LABELS = {
@@ -23,15 +24,19 @@ const SLA_CLASS = {
 };
 
 export default function TaskBoard() {
+  const { user } = useUser();
   const [tasks, setTasks] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [filterAssigned, setFilterAssigned] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
+    setTasks([]);
+    setFilterAssigned('');
+    setFilterStatus('');
     api.getTasks().then(setTasks);
     api.getEmployees().then(setEmployees);
-  }, []);
+  }, [user?.id]);
 
   const handleStatusChange = async (taskId, newStatus) => {
     await api.updateTaskStatus(taskId, newStatus);

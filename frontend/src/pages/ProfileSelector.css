@@ -1,0 +1,140 @@
+.profile-selector {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.profile-selector-inner {
+  width: 100%;
+  max-width: 720px;
+}
+
+.ps-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.ps-logo {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--primary), var(--purple));
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px var(--primary-glow);
+}
+
+.ps-header h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+
+.ps-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.ps-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ps-role-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.ps-role-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ps-role-icon {
+  font-size: 1.5rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.ps-role-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.ps-role-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.ps-employees {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.ps-employee-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.ps-employee-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-glow);
+  transform: translateY(-1px);
+}
+
+.ps-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--purple));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ps-emp-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: block;
+  line-height: 1.3;
+}
+
+.ps-emp-dept {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
