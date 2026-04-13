@@ -70,7 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg);
   border-radius: 12px;
   flex-shrink: 0;
 }
@@ -97,7 +97,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-bg-subtle);
   border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
@@ -108,8 +108,8 @@
 }
 
 .ps-employee-btn:hover {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.2);
+  background: var(--primary-light);
+  border-color: var(--primary-glow);
   transform: translateY(-1px);
 }
 

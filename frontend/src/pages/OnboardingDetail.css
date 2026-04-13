@@ -87,7 +87,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: 3px solid var(--border-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,7 +127,7 @@
 .stage-tasks-list {
   margin-left: 17px;
   padding-left: 22px;
-  border-left: 2px solid rgba(255, 255, 255, 0.08);
+  border-left: 2px solid var(--border-hover);
   display: flex;
   flex-direction: column;
   gap: 8px;
