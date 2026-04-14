@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { api } from '../api/client';
 import { useUser } from '../context/UserContext';
+import CustomSelect from '../components/CustomSelect';
 import './KnowledgeBase.css';
+
+const CATEGORY_OPTIONS = [
+  { value: 'СОП', label: '📋 СОП' },
+  { value: 'ПВТР', label: '📖 ПВТР' },
+  { value: 'ЛНА', label: '🔒 ЛНА' },
+  { value: 'Гайд', label: '📘 Гайд' },
+];
 
 function UploadModal({ onClose, onUploaded }) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Гайд');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const fileRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,33 +39,66 @@ function UploadModal({ onClose, onUploaded }) {
   };
 
   return (
-    <div className="doc-modal-overlay" onClick={onClose}>
-      <div className="doc-modal card" onClick={(e) => e.stopPropagation()}>
-        <div className="doc-modal-header">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="onb-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="onb-modal-header">
           <h2>Загрузить документ</h2>
           <button className="btn btn-outline btn-sm" onClick={onClose}>✕</button>
         </div>
-        <form onSubmit={handleSubmit} className="upload-form">
-          <div className="upload-field">
+        <p className="onb-modal-desc">Загрузите текстовый файл — он будет проиндексирован для RAG-поиска и AI-ответов.</p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="co-field" style={{ marginBottom: 14 }}>
             <label>Название документа</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               placeholder="Например: СОП — Процесс согласования" required />
           </div>
-          <div className="upload-field">
+
+          <div className="co-field" style={{ marginBottom: 14 }}>
             <label>Категория</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="СОП">СОП</option>
-              <option value="ПВТР">ПВТР</option>
-              <option value="ЛНА">ЛНА</option>
-              <option value="Гайд">Гайд</option>
-            </select>
+            <CustomSelect
+              variant="form"
+              value={category}
+              options={CATEGORY_OPTIONS}
+              placeholder="Категория"
+              onChange={setCategory}
+            />
           </div>
-          <div className="upload-field">
-            <label>Файл (.txt, .md)</label>
-            <input type="file" accept=".txt,.md,.csv" onChange={(e) => setFile(e.target.files[0])} required />
+
+          <div className="co-field" style={{ marginBottom: 14 }}>
+            <label>Файл</label>
+            <div
+              className={`upload-dropzone ${file ? 'upload-dropzone-filled' : ''}`}
+              onClick={() => fileRef.current?.click()}
+            >
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".txt,.md,.csv"
+                onChange={(e) => setFile(e.target.files[0])}
+                style={{ display: 'none' }}
+              />
+              {file ? (
+                <div className="upload-dropzone-file">
+                  <span className="upload-dropzone-icon">📄</span>
+                  <div className="upload-dropzone-info">
+                    <span className="upload-dropzone-name">{file.name}</span>
+                    <span className="upload-dropzone-size">{(file.size / 1024).toFixed(1)} КБ</span>
+                  </div>
+                  <button type="button" className="upload-dropzone-remove" onClick={(e) => { e.stopPropagation(); setFile(null); }}>✕</button>
+                </div>
+              ) : (
+                <div className="upload-dropzone-empty">
+                  <span className="upload-dropzone-icon">📎</span>
+                  <span>Нажмите для выбора файла</span>
+                  <span className="upload-dropzone-hint">.txt, .md, .csv</span>
+                </div>
+              )}
+            </div>
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading || !file || !title.trim()}>
-            {loading ? 'Загрузка...' : 'Загрузить'}
+
+          <button type="submit" className="btn btn-primary onb-modal-submit" disabled={loading || !file || !title.trim()}>
+            {loading ? 'Загрузка...' : '📤 Загрузить документ'}
           </button>
         </form>
       </div>
@@ -222,7 +264,7 @@ export default function KnowledgeBase() {
 
       {selectedDoc && (
         <div className="doc-modal-overlay" onClick={() => setSelectedDoc(null)}>
-          <div className="doc-modal card" onClick={(e) => e.stopPropagation()}>
+          <div className="doc-modal" onClick={(e) => e.stopPropagation()}>
             <div className="doc-modal-header">
               <h2>{selectedDoc.title}</h2>
               <button className="btn btn-outline btn-sm" onClick={() => setSelectedDoc(null)}>✕</button>
@@ -232,7 +274,7 @@ export default function KnowledgeBase() {
               <span>Загрузил: {selectedDoc.uploaded_by}</span>
             </div>
             <div className="doc-modal-content">
-              <pre>{selectedDoc.content}</pre>
+              <ReactMarkdown>{selectedDoc.content}</ReactMarkdown>
             </div>
           </div>
         </div>
