@@ -178,6 +178,7 @@
 
 ## Инструменты
 
-- **Cursor** (Claude Opus / Sonnet) — основной AI-агент для разработки
+- **Cursor** (Sonnet / Composter 2 Fast) — основной AI-агент для разработки
+- **Claude Code** (Opus / Sonnet) — основной AI-агент для разработки
 - **OpenRouter** — gateway для AI-чатбота (Gemini 2.5 Flash)
 - **Git + GitHub** — версионирование
