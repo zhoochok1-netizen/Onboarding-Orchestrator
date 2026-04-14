@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: onboarding-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - GATEWAY_TOKEN=${GATEWAY_TOKEN:-}
+      - GATEWAY_BASE_URL=${GATEWAY_BASE_URL:-https://openrouter.ai/api/v1}
+      - GATEWAY_MODEL=${GATEWAY_MODEL:-google/gemini-2.5-flash}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ""
+    container_name: onboarding-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend

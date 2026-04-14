@@ -174,3 +174,154 @@
   color: var(--text-muted);
   margin-top: 4px;
 }
+
+.detail-task-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ping-btn {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.ping-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.ping-btn.pinged {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.sla-done-sm {
+  color: var(--green);
+  font-size: 0.82rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Task modal in OnboardingDetail ── */
+.od-task-modal {
+  width: 100%;
+  max-width: 520px;
+  padding: 28px;
+  border-radius: var(--radius);
+  background: var(--modal-bg, #16162a);
+  border: 1px solid var(--border-hover);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.2s ease;
+}
+
+[data-theme="light"] .od-task-modal {
+  background: #ffffff;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+}
+
+.odm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.odm-header h2 { font-size: 1.1rem; }
+.odm-desc { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; }
+
+.odm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.odm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.odm-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.odm-red { color: var(--red); font-weight: 600; }
+.odm-yellow { color: var(--yellow); font-weight: 600; }
+
+.odm-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.odm-section h3 {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.odm-people {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.odm-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.odm-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--primary-dark);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.odm-avatar-green { background: var(--green); }
+
+.odm-person-info { flex: 1; }
+.odm-person-name { font-size: 0.85rem; font-weight: 600; }
+.odm-person-role { font-size: 0.75rem; color: var(--text-muted); }
+
+.odm-ping {
+  margin-left: auto;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.odm-ping:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.odm-ping.pinged {
+  background: var(--green-light);
+  color: var(--green);
+}
