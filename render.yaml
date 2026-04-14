@@ -2,7 +2,6 @@ services:
   - type: web
     name: onboarding-backend
     runtime: docker
-    region: frankfurt
     plan: free
     rootDir: backend
     dockerfilePath: ./Dockerfile
