@@ -1,5 +1,13 @@
 **/__pycache__
+**/*.py[cod]
 **/.env
+**/.env.local
 **/node_modules
 **/build
 **/.git
+**/.gitignore
+**/.vscode
+**/.idea
+**/*.swp
+**/Thumbs.db
+**/.DS_Store
