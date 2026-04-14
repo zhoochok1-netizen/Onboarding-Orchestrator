@@ -97,3 +97,257 @@
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
+
+/* ── Create Template Modal ── */
+.ct-modal {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: var(--radius);
+  background: var(--modal-bg);
+  border: 1px solid var(--border-hover);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.2s ease;
+}
+
+[data-theme="light"] .ct-modal {
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+}
+
+.ct-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.ct-modal-header h2 { font-size: 1.15rem; }
+
+.ct-modal-sub {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+/* Form fields */
+.ct-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.ct-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ct-field-grow { flex: 1; }
+
+.ct-field label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.ct-field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.ct-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.ct-field input::placeholder { color: var(--text-muted); }
+
+/* Blocks */
+.ct-block {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin-top: 6px;
+  margin-bottom: 18px;
+}
+
+.ct-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ct-block-header h3 { font-size: 0.92rem; }
+
+/* Stages */
+.ct-stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ct-stage-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.ct-stage-card:hover {
+  border-color: var(--border-hover);
+}
+
+.ct-stage-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ct-stage-fields {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.ct-stage-fields input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.ct-stage-fields input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.ct-stage-desc-input {
+  color: var(--text-secondary) !important;
+}
+
+.ct-stage-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.ct-stage-remove:hover {
+  background: var(--red-light);
+  color: var(--red);
+}
+
+/* Tasks list */
+.ct-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ct-tasks-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.ct-task-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.ct-task-card:hover { border-color: var(--border-hover); }
+
+.ct-task-card-icon { font-size: 1rem; flex-shrink: 0; }
+
+.ct-task-card-info { flex: 1; }
+.ct-task-card-title { font-size: 0.85rem; font-weight: 600; display: block; }
+.ct-task-card-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+.ct-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* Add task form */
+.ct-add-task-form {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 10px;
+}
+
+.ct-add-task-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: flex-end;
+}
+
+.ct-add-task-btn {
+  margin-top: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Submit */
+.ct-submit {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 0.9rem;
+}

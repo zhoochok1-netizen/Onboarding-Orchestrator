@@ -8,7 +8,6 @@ const NAV = {
   hr: [
     { path: '/dashboard', icon: '📊', label: 'Дашборд' },
     { path: '/tasks', icon: '✅', label: 'Доска задач' },
-    { path: '/onboardings', icon: '🚀', label: 'Онбординги' },
     { path: '/templates', icon: '📋', label: 'Шаблоны' },
     { path: '/chat', icon: '💬', label: 'AI Чатбот' },
     { path: '/knowledge', icon: '📚', label: 'База знаний' },
@@ -16,7 +15,6 @@ const NAV = {
   manager: [
     { path: '/dashboard', icon: '📊', label: 'Дашборд' },
     { path: '/tasks', icon: '✅', label: 'Задачи отдела' },
-    { path: '/onboardings', icon: '🚀', label: 'Онбординги' },
     { path: '/templates', icon: '📋', label: 'Шаблоны' },
     { path: '/knowledge', icon: '📚', label: 'База знаний' },
   ],
@@ -26,9 +24,8 @@ const NAV = {
     { path: '/knowledge', icon: '📚', label: 'База знаний' },
   ],
   mentor: [
-    { path: '/dashboard', icon: '📊', label: 'Мои задачи' },
+    { path: '/dashboard', icon: '📊', label: 'Дашборд' },
     { path: '/tasks', icon: '✅', label: 'Доска задач' },
-    { path: '/onboardings', icon: '🚀', label: 'Мои новички' },
     { path: '/knowledge', icon: '📚', label: 'База знаний' },
   ],
   newcomer: [

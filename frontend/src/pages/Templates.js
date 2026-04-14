@@ -5,121 +5,169 @@ import CustomSelect from '../components/CustomSelect';
 import './Templates.css';
 
 const ROLE_ICONS = { hr: '👤', it: '💻', manager: '👔', mentor: '🎓', newcomer: '🆕' };
-const ROLE_LABELS = { hr: 'HR', it: 'IT', manager: 'Руководитель', mentor: 'Наставник', newcomer: 'Новичок' };
+const ROLE_LABELS = { hr: 'HR', it: 'IT', manager: 'Руководитель', mentor: 'Наставник' };
 const ROLE_OPTIONS = [
-  { value: 'hr', label: 'HR' }, { value: 'it', label: 'IT' },
-  { value: 'manager', label: 'Руководитель' }, { value: 'mentor', label: 'Наставник' },
+  { value: 'hr', label: '👤 HR' }, { value: 'it', label: '💻 IT' },
+  { value: 'manager', label: '👔 Руководитель' }, { value: 'mentor', label: '🎓 Наставник' },
 ];
 
 const DEFAULT_STAGES = [
-  { id: 'new-s1', name: 'День 1', description: 'Первый рабочий день', order: 1 },
-  { id: 'new-s2', name: 'Неделя 1', description: 'Знакомство с командой', order: 2 },
-  { id: 'new-s3', name: 'Месяц 1', description: 'Погружение в работу', order: 3 },
+  { id: 'ns-1', name: 'День 1', description: 'Первый рабочий день', order: 1 },
+  { id: 'ns-2', name: 'Неделя 1', description: 'Знакомство с командой', order: 2 },
+  { id: 'ns-3', name: 'Месяц 1', description: 'Погружение в работу', order: 3 },
 ];
 
 function CreateTemplateModal({ onClose }) {
   const [form, setForm] = useState({ roleName: '', description: '' });
   const [stages, setStages] = useState(DEFAULT_STAGES.map(s => ({ ...s })));
   const [tasks, setTasks] = useState([]);
+  const [showAddTask, setShowAddTask] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', stage_id: '', responsible_role: 'hr', deadline_days: 1 });
 
   const addStage = () => {
-    const id = 'new-s' + (stages.length + 1);
-    setStages(prev => [...prev, { id, name: '', description: '', order: prev.length + 1 }]);
+    const n = stages.length + 1;
+    setStages(p => [...p, { id: 'ns-' + Date.now(), name: '', description: '', order: n }]);
   };
-
-  const updateStage = (id, field, value) => {
-    setStages(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
-  };
-
-  const removeStage = (id) => {
-    setStages(prev => prev.filter(s => s.id !== id));
-    setTasks(prev => prev.filter(t => t.stage_id !== id));
-  };
+  const updateStage = (id, field, val) => setStages(p => p.map(s => s.id === id ? { ...s, [field]: val } : s));
+  const removeStage = (id) => { setStages(p => p.filter(s => s.id !== id)); setTasks(p => p.filter(t => t.stage_id !== id)); };
 
   const addTask = () => {
     if (!newTask.title || !newTask.stage_id) return;
-    setTasks(prev => [...prev, { ...newTask, id: 'nt-' + Date.now() }]);
+    setTasks(p => [...p, { ...newTask, id: 'nt-' + Date.now() }]);
     setNewTask({ title: '', stage_id: '', responsible_role: 'hr', deadline_days: 1 });
+    setShowAddTask(false);
   };
-
-  const removeTask = (id) => setTasks(prev => prev.filter(t => t.id !== id));
+  const removeTask = (id) => setTasks(p => p.filter(t => t.id !== id));
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.roleName || stages.length === 0) return;
-    alert(`Шаблон создан!\n\n${form.roleName}\n${stages.length} этапов, ${tasks.length} задач\n\n(Демо-режим)`);
+    alert(`Шаблон «${form.roleName}» создан!\n${stages.length} этапов, ${tasks.length} задач\n\n(Демо-режим)`);
     onClose();
   };
 
-  const stageOptions = [{ value: '', label: 'Этап' }, ...stages.filter(s => s.name).map(s => ({ value: s.id, label: s.name }))];
+  const stageOpts = [{ value: '', label: 'Выберите этап' }, ...stages.filter(s => s.name).map(s => ({ value: s.id, label: s.name }))];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="onb-modal onb-modal-wide" onClick={e => e.stopPropagation()}>
-        <div className="onb-modal-header"><h2>Создать шаблон</h2><button className="btn btn-outline btn-sm" onClick={onClose}>✕</button></div>
+      <div className="ct-modal" onClick={e => e.stopPropagation()}>
+        <div className="ct-modal-header">
+          <div>
+            <h2>Создать шаблон онбординга</h2>
+            <p className="ct-modal-sub">Настройте этапы и задачи для новой роли</p>
+          </div>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>✕</button>
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <div className="co-grid">
-            <div className="co-field">
+          {/* Basic info */}
+          <div className="ct-form-grid">
+            <div className="ct-field">
               <label>Название роли</label>
-              <input type="text" placeholder="Аналитик данных" value={form.roleName} onChange={e => setForm({ ...form, roleName: e.target.value })} required />
+              <input type="text" placeholder="например: Аналитик данных" value={form.roleName}
+                onChange={e => setForm({ ...form, roleName: e.target.value })} required />
             </div>
-            <div className="co-field">
+            <div className="ct-field">
               <label>Описание</label>
-              <input type="text" placeholder="Шаблон онбординга для аналитиков" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+              <input type="text" placeholder="Шаблон онбординга для..." value={form.description}
+                onChange={e => setForm({ ...form, description: e.target.value })} />
             </div>
           </div>
 
-          <div className="ct-section">
-            <div className="ct-section-header">
-              <h3>Этапы</h3>
-              <button type="button" className="btn btn-outline btn-sm" onClick={addStage}>+ Этап</button>
+          {/* Stages */}
+          <div className="ct-block">
+            <div className="ct-block-header">
+              <h3>📌 Этапы ({stages.length})</h3>
+              <button type="button" className="btn btn-outline btn-sm" onClick={addStage}>+ Добавить</button>
             </div>
-            <div className="ct-stages">
+            <div className="ct-stage-list">
               {stages.map((stage, i) => (
-                <div key={stage.id} className="ct-stage-row">
-                  <span className="ct-stage-num">{i + 1}</span>
-                  <input type="text" placeholder="Название этапа" value={stage.name}
-                    onChange={e => updateStage(stage.id, 'name', e.target.value)} />
-                  <input type="text" placeholder="Описание" value={stage.description}
-                    onChange={e => updateStage(stage.id, 'description', e.target.value)} />
+                <div key={stage.id} className="ct-stage-card">
+                  <div className="ct-stage-badge">{i + 1}</div>
+                  <div className="ct-stage-fields">
+                    <input type="text" placeholder="Название (День 1, Неделя 1...)" value={stage.name}
+                      onChange={e => updateStage(stage.id, 'name', e.target.value)} />
+                    <input type="text" placeholder="Описание этапа" value={stage.description}
+                      className="ct-stage-desc-input"
+                      onChange={e => updateStage(stage.id, 'description', e.target.value)} />
+                  </div>
                   {stages.length > 1 && (
-                    <button type="button" className="ct-remove" onClick={() => removeStage(stage.id)}>✕</button>
+                    <button type="button" className="ct-stage-remove" onClick={() => removeStage(stage.id)}>✕</button>
                   )}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="ct-section">
-            <h3>Задачи ({tasks.length})</h3>
-            {tasks.length > 0 && (
-              <div className="ct-task-list">
-                {tasks.map(task => (
-                  <div key={task.id} className="ct-task-item">
-                    <span>{ROLE_ICONS[task.responsible_role] || '📋'}</span>
-                    <span className="ct-task-title">{task.title}</span>
-                    <span className="ct-task-meta">{stages.find(s => s.id === task.stage_id)?.name} · {ROLE_LABELS[task.responsible_role]} · {task.deadline_days} дн.</span>
-                    <button type="button" className="ct-remove" onClick={() => removeTask(task.id)}>✕</button>
+          {/* Tasks */}
+          <div className="ct-block">
+            <div className="ct-block-header">
+              <h3>📋 Задачи ({tasks.length})</h3>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => setShowAddTask(!showAddTask)}>
+                {showAddTask ? 'Отмена' : '+ Добавить'}
+              </button>
+            </div>
+
+            {tasks.length > 0 ? (
+              <div className="ct-tasks-list">
+                {stages.filter(s => s.name).map(stage => {
+                  const st = tasks.filter(t => t.stage_id === stage.id);
+                  if (!st.length) return null;
+                  return (
+                    <div key={stage.id} className="ct-tasks-group">
+                      <div className="ct-tasks-group-label">{stage.name}</div>
+                      {st.map(task => (
+                        <div key={task.id} className="ct-task-card">
+                          <span className="ct-task-card-icon">{ROLE_ICONS[task.responsible_role] || '📋'}</span>
+                          <div className="ct-task-card-info">
+                            <span className="ct-task-card-title">{task.title}</span>
+                            <span className="ct-task-card-meta">{ROLE_LABELS[task.responsible_role]} · {task.deadline_days} дн.</span>
+                          </div>
+                          <button type="button" className="ct-stage-remove" onClick={() => removeTask(task.id)}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : !showAddTask && (
+              <div className="ct-empty">Пока нет задач. Нажмите «+ Добавить» чтобы создать первую.</div>
+            )}
+
+            {showAddTask && (
+              <div className="ct-add-task-form">
+                <div className="ct-field">
+                  <label>Название задачи</label>
+                  <input type="text" placeholder="Провести welcome-встречу" value={newTask.title}
+                    onChange={e => setNewTask({ ...newTask, title: e.target.value })} />
+                </div>
+                <div className="ct-add-task-row">
+                  <div className="ct-field ct-field-grow">
+                    <label>Этап</label>
+                    <CustomSelect variant="form" value={newTask.stage_id} options={stageOpts}
+                      placeholder="Этап" onChange={v => setNewTask({ ...newTask, stage_id: v })} />
                   </div>
-                ))}
+                  <div className="ct-field ct-field-grow">
+                    <label>Ответственный</label>
+                    <CustomSelect variant="form" value={newTask.responsible_role} options={ROLE_OPTIONS}
+                      placeholder="Роль" onChange={v => setNewTask({ ...newTask, responsible_role: v })} />
+                  </div>
+                  <div className="ct-field" style={{ width: 80 }}>
+                    <label>Дедлайн</label>
+                    <input type="number" min="1" max="90" value={newTask.deadline_days}
+                      onChange={e => setNewTask({ ...newTask, deadline_days: Number(e.target.value) })} />
+                  </div>
+                </div>
+                <button type="button" className="btn btn-primary ct-add-task-btn" onClick={addTask}
+                  disabled={!newTask.title || !newTask.stage_id}>
+                  Добавить задачу
+                </button>
               </div>
             )}
-            <div className="co-add-row">
-              <input type="text" placeholder="Название задачи" value={newTask.title}
-                onChange={e => setNewTask({ ...newTask, title: e.target.value })} />
-              <CustomSelect variant="form" value={newTask.stage_id} options={stageOptions}
-                placeholder="Этап" onChange={v => setNewTask({ ...newTask, stage_id: v })} />
-              <CustomSelect variant="form" value={newTask.responsible_role} options={ROLE_OPTIONS}
-                placeholder="Роль" onChange={v => setNewTask({ ...newTask, responsible_role: v })} />
-              <input type="number" min="1" max="90" value={newTask.deadline_days} style={{ width: 60 }}
-                onChange={e => setNewTask({ ...newTask, deadline_days: Number(e.target.value) })} />
-              <button type="button" className="btn btn-outline btn-sm" onClick={addTask}>+</button>
-            </div>
           </div>
 
-          <button type="submit" className="btn btn-primary onb-modal-submit" disabled={!form.roleName}>
-            Создать шаблон
+          <button type="submit" className="btn btn-primary ct-submit" disabled={!form.roleName || stages.length === 0}>
+            Создать шаблон ({stages.length} этапов, {tasks.length} задач)
           </button>
         </form>
       </div>
@@ -140,9 +188,7 @@ export default function Templates() {
         <h1>Шаблоны онбординга</h1>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p>Маршруты адаптации по ролям</p>
-          {isHR && (
-            <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Создать шаблон</button>
-          )}
+          {isHR && <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Создать шаблон</button>}
         </div>
       </div>
 
