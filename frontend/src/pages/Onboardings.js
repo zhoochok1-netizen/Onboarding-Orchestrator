@@ -93,12 +93,21 @@ function CreateOnboardingModal({ onClose }) {
     setTasks(prev => prev.filter(t => t.id !== taskId));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.templateId) return;
-    const enabled = tasks.filter(t => t._enabled);
-    alert(`Онбординг запущен!\n\nСотрудник: ${form.name}\nШаблон: ${selectedTemplate?.role_name}\nЗадач: ${enabled.length}\n\n(Демо-режим)`);
-    onClose();
+    try {
+      await api.createOnboarding({
+        name: form.name,
+        email: form.email,
+        department: form.department,
+        template_id: form.templateId,
+      });
+      onClose();
+      window.location.reload();
+    } catch (err) {
+      alert('Ошибка: ' + err.message);
+    }
   };
 
   const deptOptions = [{ value: '', label: 'Выберите отдел' }, ...['Разработка', 'Маркетинг', 'Продажи', 'Дизайн', 'IT', 'HR'].map(d => ({ value: d, label: d }))];

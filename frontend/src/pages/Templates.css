@@ -14,13 +14,52 @@
   margin-bottom: 20px;
 }
 
-.template-header h2 {
+.template-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 4px;
+}
+
+.template-header h2 {
+  margin-bottom: 0;
 }
 
 .template-header p {
   font-size: 0.84rem;
   color: var(--text-secondary);
+}
+
+.template-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.template-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.template-action-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary-glow);
+}
+
+.template-action-danger:hover {
+  background: var(--red-light);
+  color: var(--red);
+  border-color: var(--red);
 }
 
 .template-stages {
@@ -96,4 +135,414 @@
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
+}
+
+/* ══════════════════════════════════════════
+   Create Template Modal — wide two-column
+   ══════════════════════════════════════════ */
+.ct-modal {
+  width: 100%;
+  max-width: 960px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 32px;
+  border-radius: var(--radius);
+  background: var(--modal-bg);
+  border: 1px solid var(--border-hover);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.2s ease;
+}
+
+[data-theme="light"] .ct-modal {
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+}
+
+.ct-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.ct-modal-header h2 { font-size: 1.15rem; }
+
+.ct-modal-sub {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+/* Form fields */
+.ct-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.ct-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ct-field-grow { flex: 1; }
+
+.ct-field label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.ct-field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.ct-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.ct-field input::placeholder { color: var(--text-muted); }
+
+/* Two-column layout */
+.ct-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ct-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ct-col > .ct-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Blocks */
+.ct-block {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.ct-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.ct-block-header h3 { font-size: 0.92rem; }
+
+/* Stages */
+.ct-stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.ct-stage-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.ct-stage-card:hover {
+  border-color: var(--border-hover);
+}
+
+.ct-stage-card.ct-stage-active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.ct-stage-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ct-stage-active .ct-stage-badge {
+  background: var(--primary);
+  color: white;
+}
+
+.ct-stage-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ct-stage-fields input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.ct-stage-fields input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.ct-stage-desc-input {
+  color: var(--text-secondary) !important;
+  font-size: 0.78rem !important;
+}
+
+.ct-stage-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ct-stage-task-count {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ct-stage-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.ct-stage-remove:hover {
+  background: var(--red-light);
+  color: var(--red);
+}
+
+/* Tasks column */
+.ct-tasks-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ct-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ct-tasks-group {
+  margin-bottom: 12px;
+}
+
+.ct-tasks-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+.ct-task-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  margin-bottom: 4px;
+}
+
+.ct-task-card:hover { border-color: var(--border-hover); }
+
+.ct-task-card-icon { font-size: 1rem; flex-shrink: 0; }
+
+.ct-task-card-info { flex: 1; min-width: 0; }
+.ct-task-card-title { font-size: 0.85rem; font-weight: 600; display: block; }
+.ct-task-card-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+.ct-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.ct-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.ct-empty-hint {
+  font-size: 0.78rem;
+  margin-top: 4px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Add task form */
+.ct-add-task-form {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--primary-glow);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.ct-add-task-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 70px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ct-add-task-btn {
+  margin-top: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Submit */
+.ct-submit {
+  width: 100%;
+  justify-content: center;
+  padding: 13px;
+  font-size: 0.9rem;
+  margin-top: 20px;
+  flex-shrink: 0;
+}
+
+/* ── Delete confirmation ── */
+.ct-delete-modal {
+  width: 100%;
+  max-width: 380px;
+  padding: 32px;
+  border-radius: var(--radius);
+  background: var(--modal-bg);
+  border: 1px solid var(--border-hover);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.2s ease;
+  text-align: center;
+}
+
+[data-theme="light"] .ct-delete-modal {
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+}
+
+.ct-delete-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.ct-delete-modal h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.ct-delete-modal p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.ct-delete-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.ct-delete-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.ct-btn-danger {
+  background: var(--red);
+  color: white;
+  border: none;
+}
+
+.ct-btn-danger:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .ct-modal { max-width: 100%; padding: 20px; }
+  .ct-columns { grid-template-columns: 1fr; }
+  .ct-form-grid { grid-template-columns: 1fr; }
+  .ct-add-task-row { grid-template-columns: 1fr; }
 }

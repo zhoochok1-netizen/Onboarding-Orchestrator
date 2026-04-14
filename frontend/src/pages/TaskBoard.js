@@ -14,6 +14,13 @@ const STATUS_OPTIONS = [
 
 const ALL_STATUS_OPTIONS = [{ value: '', label: 'Все статусы' }, ...STATUS_OPTIONS];
 
+const SLA_OPTIONS = [
+  { value: '', label: 'SLA 🟢🟡🔴' },
+  { value: 'green', label: 'В срок', dot: 'var(--green)' },
+  { value: 'yellow', label: 'Скоро дедлайн', dot: 'var(--yellow)' },
+  { value: 'red', label: 'Просрочено', dot: 'var(--red)' },
+];
+
 const SLA_CLASS = { green: 'sla-green', yellow: 'sla-yellow', red: 'sla-red' };
 const STATUS_LABELS = { waiting: 'Ожидает', in_progress: 'В работе', completed: 'Выполнено', overdue: 'Просрочено' };
 const SLA_LABELS = { green: '🟢 В срок', yellow: '🟡 Скоро дедлайн', red: '🔴 Просрочено' };
@@ -22,7 +29,7 @@ const PING_STORAGE = 'onboarding_autopings';
 // ── Task Detail Modal ──
 function TaskDetailModal({ task, onClose, onStatusChange, isHR }) {
   const [onboarding, setOnboarding] = useState(null);
-  const [pinged, setPinged] = useState(false);
+  const [pinged, setPinged] = useState({});
 
   useEffect(() => {
     api.getOnboarding(task.onboarding_id).then(setOnboarding);
@@ -33,9 +40,9 @@ function TaskDetailModal({ task, onClose, onStatusChange, isHR }) {
     ? `Просрочена на ${Math.abs(daysLeft)} дн.`
     : daysLeft === 0 ? 'Сегодня' : `Через ${daysLeft} дн.`;
 
-  const handlePing = () => {
-    setPinged(true);
-    setTimeout(() => setPinged(false), 3000);
+  const handlePing = (name) => {
+    setPinged(p => ({ ...p, [name]: true }));
+    setTimeout(() => setPinged(p => ({ ...p, [name]: false })), 3000);
   };
 
   return (
@@ -80,6 +87,7 @@ function TaskDetailModal({ task, onClose, onStatusChange, isHR }) {
                 <div className="tdm-person-name">{task.newcomer_name}</div>
                 <div className="tdm-person-role">Новичок</div>
               </div>
+              {isHR && <button className={`btn btn-sm tdm-ping-btn ${pinged[task.newcomer_name] ? 'pinged' : ''}`} onClick={() => handlePing(task.newcomer_name)}>{pinged[task.newcomer_name] ? '✓' : '📨 Пинг'}</button>}
             </div>
             <div className="tdm-person">
               <div className="tdm-avatar tdm-avatar-resp">{task.assigned_to_name.split(' ').map(n => n[0]).join('')}</div>
@@ -87,11 +95,7 @@ function TaskDetailModal({ task, onClose, onStatusChange, isHR }) {
                 <div className="tdm-person-name">{task.assigned_to_name}</div>
                 <div className="tdm-person-role">Ответственный ({task.responsible_role})</div>
               </div>
-              {isHR && (
-                <button className={`btn btn-sm tdm-ping-btn ${pinged ? 'pinged' : ''}`} onClick={handlePing}>
-                  {pinged ? '✓ Отправлено' : '📨 Пингануть'}
-                </button>
-              )}
+              {isHR && <button className={`btn btn-sm tdm-ping-btn ${pinged[task.assigned_to_name] ? 'pinged' : ''}`} onClick={() => handlePing(task.assigned_to_name)}>{pinged[task.assigned_to_name] ? '✓' : '📨 Пинг'}</button>}
             </div>
           </div>
         </div>
@@ -296,12 +300,13 @@ export default function TaskBoard() {
   const [employees, setEmployees] = useState([]);
   const [filterAssigned, setFilterAssigned] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterSla, setFilterSla] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPingSettings, setShowPingSettings] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
   useEffect(() => {
-    setTasks([]); setFilterAssigned(''); setFilterStatus('');
+    setTasks([]); setFilterAssigned(''); setFilterStatus(''); setFilterSla('');
     api.getTasks().then(setTasks);
     api.getEmployees().then(setEmployees);
   }, [user?.id]);
@@ -323,6 +328,7 @@ export default function TaskBoard() {
   const filtered = tasks.filter(t => {
     if (filterAssigned && t.assigned_to !== filterAssigned) return false;
     if (filterStatus && t.status !== filterStatus) return false;
+    if (filterSla && t.sla_status !== filterSla) return false;
     return true;
   });
 
@@ -349,6 +355,8 @@ export default function TaskBoard() {
           placeholder="Все ответственные" onChange={setFilterAssigned} />
         <CustomSelect value={filterStatus} options={ALL_STATUS_OPTIONS}
           placeholder="Все статусы" onChange={setFilterStatus} />
+        <CustomSelect value={filterSla} options={SLA_OPTIONS}
+          placeholder="Все SLA" onChange={setFilterSla} />
         <div className="task-count">{filtered.length} задач</div>
       </div>
 
