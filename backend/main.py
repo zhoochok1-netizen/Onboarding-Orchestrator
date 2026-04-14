@@ -1,5 +1,10 @@
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, Query, Request, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from datetime import datetime, date, timedelta
 from typing import Optional
 import uuid
@@ -794,3 +799,15 @@ def _find_onb(onboarding_id: str):
 @app.get("/api/chat/history")
 def get_chat_history():
     return [m.model_dump() for m in chat_history[-50:]]
+
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+if STATIC_DIR.is_dir():
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file = STATIC_DIR / full_path
+        if file.is_file():
+            return FileResponse(file)
+        return FileResponse(STATIC_DIR / "index.html")
+
