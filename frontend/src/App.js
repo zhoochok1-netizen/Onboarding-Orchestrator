@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import Dashboard from './pages/Dashboard';
 import TaskBoard from './pages/TaskBoard';
+import Onboardings from './pages/Onboardings';
 import Templates from './pages/Templates';
 import OnboardingDetail from './pages/OnboardingDetail';
 import Chatbot from './pages/Chatbot';
@@ -41,9 +42,10 @@ function AppContent() {
           <Route path="/tasks" element={<TaskBoard />} />
           <Route path="/knowledge" element={<KnowledgeBase />} />
 
-          {(role === 'hr' || role === 'manager' || role === 'mentor') && (
+          {(role === 'hr' || role === 'manager' || role === 'mentor') && (<>
+            <Route path="/onboardings" element={<Onboardings />} />
             <Route path="/onboardings/:id" element={<OnboardingDetail />} />
-          )}
+          </>)}
 
           {(role === 'hr' || role === 'manager') && (
             <Route path="/templates" element={<Templates />} />

@@ -186,11 +186,13 @@ def _sla(deadline: date) -> SLAStatus:
     return SLAStatus.GREEN
 
 
-def _status(deadline: date, done: bool) -> TaskStatus:
+def _status(deadline: date, done: bool, stage_order: int = 1, current_order: int = 1) -> TaskStatus:
     if done:
         return TaskStatus.COMPLETED
     if (deadline - today).days < 0:
         return TaskStatus.OVERDUE
+    if stage_order > current_order:
+        return TaskStatus.WAITING
     return TaskStatus.IN_PROGRESS
 
 
@@ -204,10 +206,26 @@ def _build_tasks(
 ) -> list[OnboardingTask]:
     tasks = []
     stage_map = {s.id: s.name for s in template.stages}
+    stage_order_map = {s.id: s.order for s in template.stages}
+
+    completed_stage_ids = set()
+    for tt in template.tasks:
+        if tt.id in done_ids:
+            completed_stage_ids.add(tt.stage_id)
+
+    current_order = 1
+    for s in sorted(template.stages, key=lambda x: x.order):
+        if s.id not in completed_stage_ids:
+            current_order = s.order
+            break
+    else:
+        current_order = template.stages[-1].order if template.stages else 1
+
     for tt in template.tasks:
         deadline = start + timedelta(days=tt.deadline_days)
         is_done = tt.id in done_ids
         responsible = role_map.get(tt.responsible_role, _emp["emp-1"])
+        task_stage_order = stage_order_map.get(tt.stage_id, 1)
         tasks.append(OnboardingTask(
             id=f"{onboarding_id}-{tt.id}",
             onboarding_id=onboarding_id,
@@ -219,7 +237,7 @@ def _build_tasks(
             assigned_to_name=responsible.full_name,
             responsible_role=tt.responsible_role,
             deadline=deadline,
-            status=TaskStatus.COMPLETED if is_done else _status(deadline, is_done),
+            status=TaskStatus.COMPLETED if is_done else _status(deadline, is_done, task_stage_order, current_order),
             sla_status=SLAStatus.GREEN if is_done else _sla(deadline),
             newcomer_id=newcomer.id,
             newcomer_name=newcomer.full_name,
@@ -244,7 +262,7 @@ def _current_stage(tasks: list[OnboardingTask], stages: list[Stage]) -> str:
     return stages[-1].name
 
 
-# ── Onboardings (8) ───────────────────────────────────────
+# ── Onboardings (10) ──────────────────────────────────────
 
 # 1. Мария Иванова — разработчик, 25 дней назад, почти завершён
 maria_start = today - timedelta(days=25)
@@ -366,7 +384,7 @@ all_tasks: list[OnboardingTask] = (
     yulia_tasks + vladislav_tasks
 )
 
-# ── Knowledge base (8 docs) ──────────────────────────────
+# ── Knowledge base (15 docs) ─────────────────────────────
 
 knowledge_docs: list[KnowledgeDocument] = [
     KnowledgeDocument(

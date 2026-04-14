@@ -7,6 +7,7 @@ import './Sidebar.css';
 const NAV = {
   hr: [
     { path: '/dashboard', icon: '📊', label: 'Дашборд' },
+    { path: '/onboardings', icon: '🚀', label: 'Онбординги' },
     { path: '/tasks', icon: '✅', label: 'Доска задач' },
     { path: '/templates', icon: '📋', label: 'Шаблоны' },
     { path: '/chat', icon: '💬', label: 'AI Чатбот' },
@@ -14,6 +15,7 @@ const NAV = {
   ],
   manager: [
     { path: '/dashboard', icon: '📊', label: 'Дашборд' },
+    { path: '/onboardings', icon: '🚀', label: 'Онбординги' },
     { path: '/tasks', icon: '✅', label: 'Задачи отдела' },
     { path: '/templates', icon: '📋', label: 'Шаблоны' },
     { path: '/knowledge', icon: '📚', label: 'База знаний' },
@@ -25,6 +27,7 @@ const NAV = {
   ],
   mentor: [
     { path: '/dashboard', icon: '📊', label: 'Дашборд' },
+    { path: '/onboardings', icon: '🚀', label: 'Онбординги' },
     { path: '/tasks', icon: '✅', label: 'Доска задач' },
     { path: '/knowledge', icon: '📚', label: 'База знаний' },
   ],

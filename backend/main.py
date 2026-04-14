@@ -1,12 +1,16 @@
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from typing import Optional
+import uuid
 
-from models import TaskStatus, SLAStatus, ChatMessage, Role, Employee
+from models import (
+    TaskStatus, SLAStatus, ChatMessage, Role, Employee,
+    OnboardingTemplate, Stage, TemplateTask, OnboardingTask, Onboarding, KnowledgeDocument,
+)
 from mock_data import (
     employees, templates, onboardings, all_tasks,
-    knowledge_docs, chat_history,
+    knowledge_docs, chat_history, _emp, _sla,
 )
 from ai_client import chat_with_context, search_knowledge_with_ai
 from rag import RAGPipeline
@@ -14,7 +18,6 @@ from config import settings
 
 app = FastAPI(title="Onboarding Orchestrator API", version="1.0.0")
 
-# Initialize RAG pipeline
 rag = RAGPipeline(knowledge_docs)
 
 app.add_middleware(
@@ -120,6 +123,98 @@ def get_template(template_id: str):
     return {"error": "Template not found"}
 
 
+@app.post("/api/templates")
+def create_template(request: Request, body: dict):
+    emp = _get_current_user(request)
+    if emp and not _is_hr(emp):
+        raise HTTPException(status_code=403, detail="Только HR может создавать шаблоны")
+    tmpl_id = f"tmpl-{uuid.uuid4().hex[:8]}"
+    stages = []
+    for i, s in enumerate(body.get("stages", [])):
+        stages.append(Stage(
+            id=s.get("id") or f"stg-{uuid.uuid4().hex[:8]}",
+            name=s["name"],
+            description=s.get("description", ""),
+            order=s.get("order", i + 1),
+        ))
+
+    tasks = []
+    stage_id_map = {s.get("id", ""): stages[i].id for i, s in enumerate(body.get("stages", [])) if i < len(stages)}
+    for t in body.get("tasks", []):
+        mapped_stage_id = stage_id_map.get(t["stage_id"], t["stage_id"])
+        tasks.append(TemplateTask(
+            id=f"tt-{uuid.uuid4().hex[:8]}",
+            title=t["title"],
+            description=t.get("description", ""),
+            stage_id=mapped_stage_id,
+            responsible_role=t.get("responsible_role", "hr"),
+            deadline_days=t.get("deadline_days", 1),
+        ))
+
+    tmpl = OnboardingTemplate(
+        id=tmpl_id,
+        role_name=body["role_name"],
+        description=body.get("description", ""),
+        stages=stages,
+        tasks=tasks,
+    )
+    templates.append(tmpl)
+    return tmpl.model_dump()
+
+
+@app.put("/api/templates/{template_id}")
+def update_template(request: Request, template_id: str, body: dict):
+    emp = _get_current_user(request)
+    if emp and not _is_hr(emp):
+        raise HTTPException(status_code=403, detail="Только HR может редактировать шаблоны")
+    for idx, t in enumerate(templates):
+        if t.id == template_id:
+            stages = []
+            for i, s in enumerate(body.get("stages", [])):
+                stages.append(Stage(
+                    id=s.get("id") or f"stg-{uuid.uuid4().hex[:8]}",
+                    name=s["name"],
+                    description=s.get("description", ""),
+                    order=s.get("order", i + 1),
+                ))
+
+            tasks = []
+            stage_id_map = {s.get("id", ""): stages[i].id for i, s in enumerate(body.get("stages", [])) if i < len(stages)}
+            for tk in body.get("tasks", []):
+                mapped_stage_id = stage_id_map.get(tk["stage_id"], tk["stage_id"])
+                tasks.append(TemplateTask(
+                    id=tk.get("id") or f"tt-{uuid.uuid4().hex[:8]}",
+                    title=tk["title"],
+                    description=tk.get("description", ""),
+                    stage_id=mapped_stage_id,
+                    responsible_role=tk.get("responsible_role", "hr"),
+                    deadline_days=tk.get("deadline_days", 1),
+                ))
+
+            updated = OnboardingTemplate(
+                id=template_id,
+                role_name=body.get("role_name", t.role_name),
+                description=body.get("description", t.description),
+                stages=stages if stages else t.stages,
+                tasks=tasks if body.get("tasks") is not None else t.tasks,
+            )
+            templates[idx] = updated
+            return updated.model_dump()
+    return {"error": "Template not found"}
+
+
+@app.delete("/api/templates/{template_id}")
+def delete_template(request: Request, template_id: str):
+    emp = _get_current_user(request)
+    if emp and not _is_hr(emp):
+        raise HTTPException(status_code=403, detail="Только HR может удалять шаблоны")
+    for idx, t in enumerate(templates):
+        if t.id == template_id:
+            templates.pop(idx)
+            return {"ok": True}
+    return {"error": "Template not found"}
+
+
 # ── Onboardings ────────────────────────────────────────────
 
 @app.get("/api/onboardings")
@@ -130,11 +225,108 @@ def get_onboardings(request: Request):
 
 
 @app.get("/api/onboardings/{onboarding_id}")
-def get_onboarding(onboarding_id: str):
-    for o in onboardings:
+def get_onboarding(request: Request, onboarding_id: str):
+    emp = _get_current_user(request)
+    filtered = _filter_onboardings_for_user(onboardings, emp)
+    for o in filtered:
         if o.id == onboarding_id:
             return o.model_dump()
     return {"error": "Onboarding not found"}
+
+
+def _resolve_role_map(department: str) -> dict:
+    """Build role→employee mapping for a department based on existing employees."""
+    role_map: dict[Role, Employee] = {}
+    for e in employees:
+        if e.role == Role.HR and Role.HR not in role_map:
+            role_map[Role.HR] = e
+        if e.role == Role.IT and Role.IT not in role_map:
+            role_map[Role.IT] = e
+        if e.role == Role.MANAGER and e.department == department and Role.MANAGER not in role_map:
+            role_map[Role.MANAGER] = e
+        if e.role == Role.MENTOR and e.department == department and Role.MENTOR not in role_map:
+            role_map[Role.MENTOR] = e
+    for role in (Role.MANAGER, Role.MENTOR):
+        if role not in role_map:
+            for e in employees:
+                if e.role == role:
+                    role_map[role] = e
+                    break
+    return role_map
+
+
+@app.post("/api/onboardings")
+def create_onboarding(request: Request, body: dict):
+    emp = _get_current_user(request)
+    if emp and not _is_hr(emp):
+        raise HTTPException(status_code=403, detail="Только HR может запускать онбординги")
+
+    name = body.get("name", "").strip()
+    email = body.get("email", "").strip()
+    department = body.get("department", "").strip()
+    template_id = body.get("template_id", "").strip()
+
+    if not name or not template_id:
+        raise HTTPException(status_code=400, detail="Укажите имя сотрудника и шаблон")
+
+    tmpl = None
+    for t in templates:
+        if t.id == template_id:
+            tmpl = t
+            break
+    if not tmpl:
+        raise HTTPException(status_code=404, detail="Шаблон не найден")
+
+    newcomer_id = f"emp-{uuid.uuid4().hex[:6]}"
+    newcomer = Employee(
+        id=newcomer_id, full_name=name, email=email or f"{newcomer_id}@company.ru",
+        role=Role.NEWCOMER, department=department or "Общий",
+    )
+    employees.append(newcomer)
+    _emp[newcomer.id] = newcomer
+    _emp_map[newcomer.id] = newcomer
+
+    onb_id = f"onb-{uuid.uuid4().hex[:6]}"
+    start = date.today()
+    role_map = _resolve_role_map(department)
+
+    stage_map = {s.id: s.name for s in tmpl.stages}
+    stage_order_map = {s.id: s.order for s in tmpl.stages}
+
+    tasks: list[OnboardingTask] = []
+    for tt in tmpl.tasks:
+        deadline = start + timedelta(days=tt.deadline_days)
+        responsible = role_map.get(tt.responsible_role, employees[0])
+        task_stage_order = stage_order_map.get(tt.stage_id, 1)
+        status = TaskStatus.WAITING if task_stage_order > 1 else TaskStatus.IN_PROGRESS
+        tasks.append(OnboardingTask(
+            id=f"{onb_id}-{tt.id}",
+            onboarding_id=onb_id,
+            title=tt.title,
+            description=tt.description,
+            stage_id=tt.stage_id,
+            stage_name=stage_map.get(tt.stage_id, ""),
+            assigned_to=responsible.id,
+            assigned_to_name=responsible.full_name,
+            responsible_role=tt.responsible_role,
+            deadline=deadline,
+            status=status,
+            sla_status=_sla(deadline),
+            newcomer_id=newcomer.id,
+            newcomer_name=newcomer.full_name,
+        ))
+
+    current_stage = tmpl.stages[0].name if tmpl.stages else ""
+    onb = Onboarding(
+        id=onb_id, newcomer_id=newcomer.id, newcomer_name=name,
+        template_id=tmpl.id, template_role=tmpl.role_name,
+        start_date=start, current_stage=current_stage,
+        progress=0, tasks=tasks,
+    )
+    onboardings.append(onb)
+    all_tasks.extend(tasks)
+
+    return onb.model_dump()
 
 
 # ── Tasks ──────────────────────────────────────────────────
@@ -157,6 +349,35 @@ def get_tasks(
     return [t.model_dump() for t in result]
 
 
+def _recalc_onboarding(onboarding_id: str):
+    """Recalculate progress and current_stage for an onboarding after task status change."""
+    for o in onboardings:
+        if o.id == onboarding_id:
+            total = len(o.tasks)
+            completed = sum(1 for t in o.tasks if t.status == TaskStatus.COMPLETED)
+            o.progress = int(completed / total * 100) if total else 0
+
+            stage_names = []
+            seen = set()
+            for t in o.tasks:
+                if t.stage_name not in seen:
+                    stage_names.append(t.stage_name)
+                    seen.add(t.stage_name)
+
+            completed_stages = set()
+            for stage_name in stage_names:
+                stage_tasks = [t for t in o.tasks if t.stage_name == stage_name]
+                if all(t.status == TaskStatus.COMPLETED for t in stage_tasks):
+                    completed_stages.add(stage_name)
+
+            o.current_stage = stage_names[-1] if stage_names else ""
+            for stage_name in stage_names:
+                if stage_name not in completed_stages:
+                    o.current_stage = stage_name
+                    break
+            break
+
+
 @app.patch("/api/tasks/{task_id}/status")
 def update_task_status(task_id: str, new_status: TaskStatus):
     for t in all_tasks:
@@ -164,6 +385,9 @@ def update_task_status(task_id: str, new_status: TaskStatus):
             t.status = new_status
             if new_status == TaskStatus.COMPLETED:
                 t.sla_status = SLAStatus.GREEN
+            else:
+                t.sla_status = _sla(t.deadline)
+            _recalc_onboarding(t.onboarding_id)
             return t.model_dump()
     return {"error": "Task not found"}
 
@@ -228,18 +452,55 @@ def get_document(doc_id: str):
     return {"error": "Document not found"}
 
 
+@app.post("/api/knowledge/upload")
+async def upload_knowledge(
+    request: Request,
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    category: str = Form("Гайд"),
+):
+    emp = _get_current_user(request)
+    if emp and not _is_hr(emp):
+        raise HTTPException(status_code=403, detail="Только HR может загружать документы")
+
+    content = await file.read()
+    text = content.decode("utf-8", errors="replace")
+
+    doc_id = f"doc-{uuid.uuid4().hex[:6]}"
+    doc = KnowledgeDocument(
+        id=doc_id,
+        title=title,
+        category=category,
+        content=text,
+        uploaded_by=emp.full_name if emp else "Система",
+        uploaded_at=datetime.now(),
+    )
+    knowledge_docs.append(doc)
+
+    global rag
+    rag = RAGPipeline(knowledge_docs)
+
+    return doc.model_dump()
+
+
 @app.post("/api/knowledge/ask")
 def ask_knowledge(body: dict):
     query = body.get("query", "").strip()
     if not query:
         return {"answer": "Пожалуйста, задайте вопрос."}
 
-    if not settings.gateway_token:
-        return {"answer": "AI недоступен: токен не настроен. Обратитесь к HR."}
+    rag_context = rag.build_context(query, top_k=5)
 
-    context = _build_knowledge_context()
-    answer = search_knowledge_with_ai(query, context)
-    return {"answer": answer}
+    if settings.gateway_token:
+        context = _build_knowledge_context()
+        answer = search_knowledge_with_ai(query, context)
+    else:
+        if rag_context and "не найдено" not in rag_context.lower():
+            answer = f"**По вашему запросу найдено в базе знаний:**\n\n{rag_context}\n\n> Для более точных AI-ответов настройте GATEWAY_TOKEN."
+        else:
+            answer = "По вашему запросу ничего не найдено. Попробуйте переформулировать вопрос или обратитесь к HR."
+
+    return {"answer": answer, "rag_context": rag_context}
 
 
 # ── Chatbot ────────────────────────────────────────────────

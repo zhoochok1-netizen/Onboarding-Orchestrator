@@ -78,11 +78,21 @@ function CreateOnboardingModal({ onClose }) {
   };
   const removeTask = (id) => setTasks(p => p.filter(t => t.id !== id));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.templateId) return;
-    alert(`Онбординг запущен!\n\n${form.name} · ${selectedTemplate?.role_name}\nЗадач: ${tasks.filter(t => t._enabled).length}\n\n(Демо-режим)`);
-    onClose();
+    try {
+      await api.createOnboarding({
+        name: form.name,
+        email: form.email,
+        department: form.department,
+        template_id: form.templateId,
+      });
+      onClose();
+      window.location.reload();
+    } catch (err) {
+      alert('Ошибка: ' + err.message);
+    }
   };
 
   const ROLE_ICONS = { hr: '👤', it: '💻', manager: '👔', mentor: '🎓' };

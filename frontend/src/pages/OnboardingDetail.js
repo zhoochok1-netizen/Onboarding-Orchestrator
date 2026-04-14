@@ -123,6 +123,7 @@ export default function OnboardingDetail() {
     <div className="onboarding-detail">
       <Link to="/onboardings" className="back-link">← Назад к онбордингам</Link>
 
+
       <div className="detail-header card">
         <div className="detail-header-top">
           <div className="avatar-circle avatar-lg">

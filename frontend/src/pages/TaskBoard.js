@@ -15,7 +15,7 @@ const STATUS_OPTIONS = [
 const ALL_STATUS_OPTIONS = [{ value: '', label: 'Все статусы' }, ...STATUS_OPTIONS];
 
 const SLA_OPTIONS = [
-  { value: '', label: 'SLA' },
+  { value: '', label: 'SLA 🟢🟡🔴' },
   { value: 'green', label: 'В срок', dot: 'var(--green)' },
   { value: 'yellow', label: 'Скоро дедлайн', dot: 'var(--yellow)' },
   { value: 'red', label: 'Просрочено', dot: 'var(--red)' },
