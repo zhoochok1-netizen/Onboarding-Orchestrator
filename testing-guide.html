@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding Orchestrator Testing Guide</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050815;
+      --bg2: #090f20;
+      --panel: rgba(12, 18, 37, 0.76);
+      --panel-2: rgba(18, 26, 50, 0.9);
+      --line: rgba(255, 255, 255, 0.1);
+      --text: #f6f8fd;
+      --muted: #9ba7c8;
+      --primary: #7d8cff;
+      --cyan: #45dfff;
+      --green: #39d7a1;
+      --yellow: #ffc85b;
+      --red: #ff738b;
+      --purple: #ba8bff;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      --radius-xl: 30px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --max: 1280px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(125, 140, 255, 0.22), transparent 24%),
+        radial-gradient(circle at 92% 14%, rgba(69, 223, 255, 0.18), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(186, 139, 255, 0.16), transparent 26%),
+        linear-gradient(180deg, #040611 0%, #070b18 34%, #091122 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: linear-gradient(180deg, rgba(255,255,255,0.65), transparent 94%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+    }
+
+    .shell {
+      width: min(calc(100% - 36px), var(--max));
+      margin: 0 auto;
+    }
+
+    .section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 72px 0;
+    }
+
+    .hero {
+      min-height: 100vh;
+    }
+
+    .hero-grid,
+    .two-col,
+    .guide-grid,
+    .final-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #dce2fa;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--cyan), var(--primary));
+      box-shadow: 0 0 18px rgba(69, 223, 255, 0.55);
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(44px, 7.2vw, 88px);
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      margin-bottom: 22px;
+      max-width: 11ch;
+    }
+
+    h2 {
+      font-size: clamp(30px, 4vw, 56px);
+      line-height: 1.03;
+      letter-spacing: -0.04em;
+      margin-bottom: 14px;
+    }
+
+    h3 {
+      font-size: 22px;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: clamp(18px, 2vw, 21px);
+      line-height: 1.68;
+      max-width: 64ch;
+    }
+
+    .body {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    .glass,
+    .card,
+    .step-card,
+    .role-card,
+    .prompt-card,
+    .check-card,
+    .note-card,
+    .final-card,
+    .mini-browser {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero-actions,
+    .pill-row,
+    .route-tabs,
+    .prompt-actions,
+    .role-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .hero-actions {
+      margin-top: 28px;
+    }
+
+    .btn,
+    .pill,
+    .route-tabs button,
+    .copy-btn,
+    .role-tabs button {
+      font: inherit;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn:hover,
+    .route-tabs button:hover,
+    .copy-btn:hover,
+    .role-tabs button:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      color: #08101c;
+      border-color: transparent;
+      background: linear-gradient(135deg, #b8c4ff, #7cf1ff);
+      box-shadow: 0 12px 40px rgba(124, 241, 255, 0.22);
+    }
+
+    .pill-row {
+      margin-top: 28px;
+    }
+
+    .pill strong {
+      margin-right: 8px;
+      font-size: 18px;
+    }
+
+    .mini-browser {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .browser-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .dots span:nth-child(1) { background: #ff6d7d; }
+    .dots span:nth-child(2) { background: #ffc85b; }
+    .dots span:nth-child(3) { background: #37df94; }
+
+    .address {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .ui-grid {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      min-height: 520px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(17, 24, 47, 0.92), rgba(8, 12, 24, 0.96));
+    }
+
+    .ui-sidebar {
+      padding: 16px 12px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(5, 9, 18, 0.4);
+    }
+
+    .ui-logo,
+    .ui-icon {
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .ui-logo {
+      height: 52px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      background: linear-gradient(135deg, rgba(125, 140, 255, 0.28), rgba(69, 223, 255, 0.24));
+    }
+
+    .ui-icon {
+      height: 40px;
+    }
+
+    .ui-main {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .ui-top {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .ui-stat,
+    .ui-panel,
+    .route-card,
+    .step-card,
+    .role-card,
+    .prompt-card,
+    .check-card,
+    .note-card,
+    .final-card {
+      padding: 22px;
+    }
+
+    .ui-stat {
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .ui-stat small {
+      display: block;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .ui-stat strong {
+      font-size: 28px;
+      letter-spacing: -0.04em;
+    }
+
+    .ui-center {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 12px;
+    }
+
+    .ui-panel {
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .bar-list,
+    .todo-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .bar-item {
+      display: grid;
+      gap: 8px;
+    }
+
+    .bar-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #dde4fe;
+    }
+
+    .bar {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--primary));
+      border-radius: inherit;
+    }
+
+    .todo {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .todo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .green { background: var(--green); }
+    .yellow { background: var(--yellow); }
+    .red { background: var(--red); }
+
+    .route-tabs {
+      margin: 24px 0 18px;
+    }
+
+    .route-tabs button.active,
+    .role-tabs button.active {
+      background: linear-gradient(135deg, rgba(125, 140, 255, 0.24), rgba(69, 223, 255, 0.2));
+      border-color: rgba(125, 140, 255, 0.38);
+    }
+
+    .route-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .route-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .route-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      background: linear-gradient(135deg, rgba(125, 140, 255, 0.26), rgba(69, 223, 255, 0.22));
+    }
+
+    .route-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: #dce2fa;
+      font-size: 13px;
+    }
+
+    .guide-grid {
+      margin-top: 24px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 16px;
+    }
+
+    .step-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .step-index {
+      display: inline-flex;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #dbe2fb;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .step-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .step-actions div,
+    .check-item,
+    .note-item,
+    .role-point {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sticky-col {
+      display: grid;
+      gap: 16px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .check-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      cursor: pointer;
+    }
+
+    .check-item input {
+      margin-top: 2px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--cyan);
+    }
+
+    .check-item.done {
+      border-color: rgba(57, 215, 161, 0.28);
+      background: rgba(57, 215, 161, 0.08);
+    }
+
+    .progress-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .progress-bar {
+      margin-top: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+    }
+
+    .progress-bar span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), var(--cyan), var(--primary));
+      transition: width 0.25s ease;
+    }
+
+    .role-tabs {
+      margin: 24px 0 18px;
+    }
+
+    .role-layout {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .role-points {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .prompt-sample {
+      padding: 14px 16px;
+      border-radius: 16px;
+      margin: 14px 0;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: #edf1ff;
+      line-height: 1.6;
+      min-height: 88px;
+    }
+
+    .copy-btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    .final-grid {
+      margin-top: 24px;
+    }
+
+    .note-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1100px) {
+      .hero-grid,
+      .two-col,
+      .guide-grid,
+      .final-grid,
+      .role-layout,
+      .ui-center,
+      .prompt-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sticky-col {
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(calc(100% - 22px), var(--max));
+      }
+
+      .section {
+        min-height: auto;
+        padding: 60px 0 42px;
+      }
+
+      .hero {
+        min-height: auto;
+      }
+
+      .ui-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ui-sidebar {
+        display: none;
+      }
+
+      .ui-top {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .route-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="section hero">
+      <div class="shell hero-grid">
+        <div class="reveal visible">
+          <div class="eyebrow">Testing Guide</div>
+          <h1>Путь тестирования приложения</h1>
+          <p class="lead">
+            Этот файл нужен тестировщикам как удобный маршрут по приложению. Здесь собран понятный сценарий:
+            под каким профилем заходить, какие страницы открывать, куда нажимать и какие функции должны
+            быть проверены в `Onboarding Orchestrator`.
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#route">Открыть test route</a>
+            <a class="btn" href="#prompts">Тестовые AI-запросы</a>
+          </div>
+
+          <div class="pill-row">
+            <div class="pill"><strong>5</strong> ролей для переключения</div>
+            <div class="pill"><strong>7</strong> ключевых шагов проверки</div>
+            <div class="pill"><strong>2</strong> маршрута: smoke и full</div>
+          </div>
+        </div>
+
+        <div class="mini-browser reveal">
+          <div class="browser-top">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="address">http://localhost:3000</div>
+          </div>
+
+          <div class="ui-grid">
+            <aside class="ui-sidebar">
+              <div class="ui-logo">OO</div>
+              <div class="ui-icon"></div>
+              <div class="ui-icon"></div>
+              <div class="ui-icon"></div>
+              <div class="ui-icon"></div>
+              <div class="ui-icon"></div>
+            </aside>
+
+            <div class="ui-main">
+              <div class="ui-top">
+                <div class="ui-stat"><small>Профиль</small><strong>HR</strong></div>
+                <div class="ui-stat"><small>Задачи</small><strong>100</strong></div>
+                <div class="ui-stat"><small>Онбординги</small><strong>10</strong></div>
+                <div class="ui-stat"><small>Документы</small><strong>15</strong></div>
+              </div>
+
+              <div class="ui-center">
+                <div class="ui-panel">
+                  <h3>Что проверить вначале</h3>
+                  <div class="bar-list">
+                    <div class="bar-item">
+                      <div class="bar-head"><span>Dashboard + SLA</span><span>Step 1</span></div>
+                      <div class="bar"><span style="width:92%"></span></div>
+                    </div>
+                    <div class="bar-item">
+                      <div class="bar-head"><span>Templates / Onboardings</span><span>Step 2-4</span></div>
+                      <div class="bar"><span style="width:78%"></span></div>
+                    </div>
+                    <div class="bar-item">
+                      <div class="bar-head"><span>Knowledge + AI</span><span>Step 5-6</span></div>
+                      <div class="bar"><span style="width:88%"></span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ui-panel">
+                  <h3>Что обязательно дойти проверить</h3>
+                  <div class="todo-list">
+                    <div class="todo">
+                      <span class="todo-dot green"></span>
+                      <div>Проверить role-based интерфейс</div>
+                      <small>RBAC</small>
+                    </div>
+                    <div class="todo">
+                      <span class="todo-dot yellow"></span>
+                      <div>Проверить AI по задачам и документам</div>
+                      <small>AI</small>
+                    </div>
+                    <div class="todo">
+                      <span class="todo-dot red"></span>
+                      <div>Открыть модалки по ссылкам из ответа</div>
+                      <small>Links</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ui-panel">
+                <h3>Логика маршрута</h3>
+                <p class="body">
+                  Не ходить по приложению хаотично. Сначала проверяются базовые разделы и роли,
+                  затем CRUD и сценарии с данными, после этого база знаний, AI и переходы по связанным сущностям.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="route">
+      <div class="shell">
+        <div class="reveal">
+          <div class="eyebrow">Маршрут тестирования</div>
+          <h2>Выбери формат: smoke-check или полный проход</h2>
+          <p class="lead">
+            Если времени мало, можно пройти сокращённый smoke-маршрут и быстро проверить,
+            что основные фичи работают. Если нужен полноценный проход, используйте полный сценарий.
+          </p>
+        </div>
+
+        <div class="route-tabs reveal" id="routeTabs">
+          <button class="active" data-route="fast">Smoke route</button>
+          <button data-route="full">Full route</button>
+        </div>
+
+        <div class="route-panel reveal" id="routePanel"></div>
+      </div>
+    </section>
+
+    <section class="section" id="steps">
+      <div class="shell">
+        <div class="reveal">
+          <div class="eyebrow">Пошагово</div>
+          <h2>Подробный сценарий тестирования: что нажимать в интерфейсе</h2>
+          <p class="lead">
+            Это рабочий чеклист для ручной проверки. Отмечай шаги по мере прохождения,
+            чтобы не пропускать ключевые функции и различия между ролями.
+          </p>
+        </div>
+
+        <div class="guide-grid">
+          <div class="steps">
+            <article class="step-card reveal">
+              <div class="step-index">Шаг 1</div>
+              <h3>Вход под HR</h3>
+              <p class="body">
+                На стартовом экране выбора профиля выбери любой профиль из группы `HR`.
+                Это стартовая роль для тестирования, потому что именно HR видит максимум разделов:
+                `Дашборд`, `Онбординги`, `Доска задач`, `Шаблоны`, `AI Чатбот`, `База знаний`.
+              </p>
+              <div class="step-actions">
+                <div>Открой приложение и выбери профиль `HR`.</div>
+                <div>Убедись, что после входа отображается полный набор разделов.</div>
+                <div>В правом верхнем углу кликни по иконке темы и проверь переключение dark/light.</div>
+              </div>
+            </article>
+
+            <article class="step-card reveal">
+              <div class="step-index">Шаг 2</div>
+              <h3>Показать Dashboard и SLA</h3>
+              <p class="body">
+                На `Дашборде` нужно проверить, что система отображает агрегированную сводку
+                по онбордингам, задачам и рискам по срокам.
+              </p>
+              <div class="step-actions">
+                <div>Открой `Дашборд` и покажи сводку по активным онбордингам.</div>
+                <div>Проверь SLA-индикаторы: зелёный, жёлтый, красный.</div>
+                <div>Убедись, что дашборд корректно отображает общую картину для HR.</div>
+              </div>
+            </article>
+
+            <article class="step-card reveal">
+              <div class="step-index">Шаг 3</div>
+              <h3>Перейти в Onboardings</h3>
+              <p class="body">
+                Здесь нужно проверить, что summary действительно раскрывается в конкретный маршрут адаптации:
+                этапы, прогресс, задачи и статус конкретного новичка.
+              </p>
+              <div class="step-actions">
+                <div>Открой `Онбординги`.</div>
+                <div>Кликни по любому onboarding card или детальному маршруту.</div>
+                <div>Покажи прогресс, текущий этап и наличие просроченных задач, если они есть.</div>
+              </div>
+            </article>
+
+            <article class="step-card reveal">
+              <div class="step-index">Шаг 4</div>
+              <h3>Показать Templates и запуск нового onboarding</h3>
+              <p class="body">
+                В этом блоке проверяется, что приложение умеет не только отображать текущие процессы,
+                но и настраивать маршруты адаптации по ролям.
+              </p>
+              <div class="step-actions">
+                <div>Открой `Шаблоны` и покажи карточки существующих шаблонов.</div>
+                <div>Нажми `+ Создать шаблон` и проверь крупную модалку с этапами и задачами.</div>
+                <div>После этого можно перейти в `Онбординги` или `Дашборд` и нажать `+ Запустить онбординг`.</div>
+              </div>
+            </article>
+
+            <article class="step-card reveal">
+              <div class="step-index">Шаг 5</div>
+              <h3>База знаний и RAG</h3>
+              <p class="body">
+                На странице `База знаний` нужно проверить поиск по документам,
+                открытие содержимого и доступность загрузки документа под HR.
+              </p>
+              <div class="step-actions">
+                <div>Открой `База знаний`.</div>
+                <div>В строке поиска задай запрос вроде `VPN`, `отпуск` или `доступы`.</div>
+                <div>Кликни по найденному документу, чтобы открыть модалку с содержимым.</div>
+                <div>Если нужно проверить CRUD, под HR нажми `+ Загрузить документ`.</div>
+              </div>
+            </article>
+
+            <article class="step-card reveal">
+              <div class="step-index">Шаг 6</div>
+              <h3>AI-чатбот и AI по базе знаний</h3>
+              <p class="body">
+                Здесь нужно проверить, что AI отвечает на вопросы, работает с markdown
+                и корректно открывает связанные сущности по ссылкам в ответе.
+              </p>
+              <div class="step-actions">
+                <div>На `База знаний` используй блок `Спросить AI по базе знаний`.</div>
+                <div>Потом перейди в `AI Чатбот` под HR или Новичком.</div>
+                <div>Нажми одну из suggestion-кнопок или введи свой вопрос вручную.</div>
+                <div>Если в ответе есть ссылки на задачу, онбординг или документ, обязательно кликни по ним и открой модалку.</div>
+              </div>
+            </article>
+
+            <article class="step-card reveal">
+              <div class="step-index">Шаг 7</div>
+              <h3>Переключить профиль и проверить role-based UX</h3>
+              <p class="body">
+                На этом шаге нужно проверить, что это действительно multi-role система:
+                один и тот же продукт выглядит по-разному для разных участников процесса.
+              </p>
+              <div class="step-actions">
+                <div>Нажми на аватар справа сверху и выбери `Сменить профиль`.</div>
+                <div>Зайди под `Новичком` и проверь, что интерфейс стал проще: свои задачи, свой onboarding, AI-помощник.</div>
+                <div>Переключись на `IT` или `Руководителя` и проверь ограниченную навигацию без лишних разделов.</div>
+              </div>
+            </article>
+          </div>
+
+          <div class="sticky-col reveal">
+            <div class="check-card">
+              <h3>Чеклист тестирования</h3>
+              <p class="body">Кликабельный список. Состояние сохраняется в браузере.</p>
+
+              <div id="checklist">
+                <label class="check-item"><input type="checkbox" data-id="login-hr"><span>Войти под HR</span></label>
+                <label class="check-item"><input type="checkbox" data-id="show-theme"><span>Проверить переключение темы</span></label>
+                <label class="check-item"><input type="checkbox" data-id="show-dashboard"><span>Проверить Dashboard и SLA</span></label>
+                <label class="check-item"><input type="checkbox" data-id="show-onboardings"><span>Открыть онбординг и проверить прогресс</span></label>
+                <label class="check-item"><input type="checkbox" data-id="show-templates"><span>Открыть Templates / Create flow</span></label>
+                <label class="check-item"><input type="checkbox" data-id="show-kb"><span>Проверить поиск по базе знаний</span></label>
+                <label class="check-item"><input type="checkbox" data-id="show-ai"><span>Проверить AI и открыть ссылку из ответа</span></label>
+                <label class="check-item"><input type="checkbox" data-id="switch-role"><span>Сменить профиль и проверить role-based UX</span></label>
+              </div>
+
+              <div class="progress-box">
+                <div id="progressText">0 из 8 шагов выполнено</div>
+                <div class="progress-bar"><span id="progressFill"></span></div>
+              </div>
+            </div>
+
+            <div class="note-card">
+              <h3>Что считать успешно проверенным</h3>
+              <div class="note-list">
+                <div class="note-item">Разделы открываются без ошибок и соответствуют роли пользователя.</div>
+                <div class="note-item">Ключевые CRUD и переходы по сущностям работают через UI.</div>
+                <div class="note-item">AI-ответы приходят, а ссылки в ответах открывают связанные данные.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="roles">
+      <div class="shell">
+        <div class="reveal">
+          <div class="eyebrow">Role Testing Guide</div>
+          <h2>Какие роли проверять и на что смотреть</h2>
+          <p class="lead">
+            Если времени хватает только на 1-2 переключения, достаточно проверить `HR` и `Новичка`.
+            Для более полного прохода добавьте `IT`, `Руководителя` и `Наставника`.
+          </p>
+        </div>
+
+        <div class="role-tabs reveal" id="roleTabs">
+          <button class="active" data-role="hr">HR</button>
+          <button data-role="newcomer">Новичок</button>
+          <button data-role="manager">Руководитель</button>
+          <button data-role="it">IT</button>
+          <button data-role="mentor">Наставник</button>
+        </div>
+
+        <div class="role-layout">
+          <div class="role-card reveal">
+            <h3 id="roleName">HR</h3>
+            <p class="body" id="roleDesc">
+              Лучший профиль для старта. Даёт полный обзор по онбордингам, задачам, шаблонам, чату и базе знаний.
+            </p>
+            <div class="role-points" id="rolePoints"></div>
+          </div>
+
+          <div class="role-card reveal">
+            <h3>Что проверить в интерфейсе</h3>
+            <div class="role-points" id="roleActions"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="prompts">
+      <div class="shell">
+        <div class="reveal">
+          <div class="eyebrow">AI Test Pack</div>
+          <h2>Готовые вопросы для проверки AI</h2>
+          <p class="lead">
+            Ниже готовые фразы, которые удобно использовать во время ручного тестирования. Можно копировать в один клик
+            и вставлять в `AI Чатбот` или в блок `Спросить AI по базе знаний`.
+          </p>
+        </div>
+
+        <div class="prompt-grid">
+          <article class="prompt-card reveal">
+            <h3>Задачи и прогресс</h3>
+            <div class="prompt-sample">Что мне нужно сделать по моим задачам прямо сейчас?</div>
+            <div class="prompt-actions">
+              <button class="copy-btn" data-copy="Что мне нужно сделать по моим задачам прямо сейчас?">Скопировать</button>
+            </div>
+          </article>
+
+          <article class="prompt-card reveal">
+            <h3>Процессы и политика</h3>
+            <div class="prompt-sample">Как получить доступ к VPN и где посмотреть правила удалённой работы?</div>
+            <div class="prompt-actions">
+              <button class="copy-btn" data-copy="Как получить доступ к VPN и где посмотреть правила удалённой работы?">Скопировать</button>
+            </div>
+          </article>
+
+          <article class="prompt-card reveal">
+            <h3>Риск по срокам</h3>
+            <div class="prompt-sample">Какие задачи сейчас просрочены и на что нужно обратить внимание в первую очередь?</div>
+            <div class="prompt-actions">
+              <button class="copy-btn" data-copy="Какие задачи сейчас просрочены и на что нужно обратить внимание в первую очередь?">Скопировать</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="final">
+      <div class="shell">
+        <div class="reveal">
+          <div class="eyebrow">Regression Scope</div>
+          <h2>Итоговый объём ручной проверки</h2>
+          <p class="lead">
+            После прохождения маршрута ниже у тестировщика должно быть покрыто большинство пользовательских сценариев:
+            вход под ролями, навигация, данные, CRUD, поиск, документы, AI и переходы между сущностями.
+          </p>
+        </div>
+
+        <div class="final-grid">
+          <div class="final-card reveal">
+            <h3>Что должно быть покрыто</h3>
+            <div class="note-list">
+              <div class="note-item">Проверка входа и смены профиля для разных ролей.</div>
+              <div class="note-item">Проверка ключевых страниц: dashboard, onboardings, tasks, templates, knowledge, chat.</div>
+              <div class="note-item">Проверка поиска, модалок, ссылок из AI и основных действий через UI.</div>
+              <div class="note-item">Проверка различий между ролями по навигации и доступным данным.</div>
+            </div>
+          </div>
+
+          <div class="final-card reveal">
+            <h3>Минимальный smoke-pass</h3>
+            <div class="note-list">
+              <div class="note-item">Вход под HR -> Dashboard -> Onboardings -> Templates.</div>
+              <div class="note-item">Knowledge Base -> поиск -> открыть документ -> Ask AI.</div>
+              <div class="note-item">Смена профиля на Новичка -> проверить упрощённую навигацию и AI чат.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const routeData = {
+      fast: [
+        {
+          title: "Войти под HR и проверить Dashboard",
+          text: "Начни с роли HR. Проверь, что открывается полный набор разделов, видна общая картина по онбордингам и корректно отображаются SLA-индикаторы.",
+          tags: ["Профиль: HR", "Экран: Дашборд", "Фокус: SLA"]
+        },
+        {
+          title: "Открыть Templates или Onboardings",
+          text: "Проверь, что можно открыть маршруты адаптации и шаблоны, а интерфейс корректно показывает этапы, задачи и доступные действия.",
+          tags: ["Экран: Шаблоны", "Или: Онбординги", "Фокус: orchestration"]
+        },
+        {
+          title: "Проверить Базу знаний и AI",
+          text: "Введи запрос по документам, затем задай вопрос AI. Если в ответе есть ссылки на сущности, проверь открытие модалок.",
+          tags: ["Экран: База знаний", "AI demo", "RAG"]
+        },
+        {
+          title: "Сменить профиль на Новичка",
+          text: "Проверь role-based UX: интерфейс должен стать проще, а в меню должны остаться только персональные разделы.",
+          tags: ["Профиль: Новичок", "Role-based UX", "Финал"]
+        }
+      ],
+      full: [
+        {
+          title: "Войти под HR",
+          text: "Проверь, что HR получает полный набор разделов и именно из этого профиля доступны все основные пользовательские сценарии.",
+          tags: ["HR", "Полный доступ", "Старт"]
+        },
+        {
+          title: "Dashboard + theme toggle",
+          text: "На дашборде проверь сводную статистику, SLA и корректность отображения данных. Затем проверь смену темы в topbar.",
+          tags: ["Dashboard", "SLA", "Dark/Light"]
+        },
+        {
+          title: "Onboardings detail",
+          text: "Открой конкретный onboarding и проверь этап, прогресс, список задач и отображение просроченных элементов.",
+          tags: ["Onboardings", "Progress", "Task context"]
+        },
+        {
+          title: "Templates CRUD",
+          text: "Открой шаблоны, затем модалку `+ Создать шаблон`, чтобы проверить этапы, задачи, ответственных и общую логику конструктора.",
+          tags: ["Templates", "CRUD", "Process design"]
+        },
+        {
+          title: "Knowledge Base",
+          text: "Сделай поиск по знаниям, открой документ и при необходимости проверь под HR кнопку загрузки нового документа.",
+          tags: ["Search", "Docs", "Upload"]
+        },
+        {
+          title: "AI Chat / Ask AI",
+          text: "Задай вопрос про задачи или документы. Затем проверь, что ссылка в AI-ответе открывает связанную сущность в модалке.",
+          tags: ["AI", "Markdown", "Interactive links"]
+        },
+        {
+          title: "Сменить профиль",
+          text: "Переключись на Новичка, затем по желанию на IT или Руководителя и проверь различия по навигации и доступным данным.",
+          tags: ["Role-based", "Newcomer", "IT / Manager"]
+        }
+      ]
+    };
+
+    const roleData = {
+      hr: {
+        name: "HR",
+        desc: "Базовая стартовая роль для тестирования. Даёт полный обзор по онбордингам, задачам, шаблонам, чату и базе знаний.",
+        points: [
+          "Видит все онбординги и всю аналитику.",
+          "Может создавать и редактировать шаблоны.",
+          "Может запускать новый onboarding flow.",
+          "Имеет доступ к AI-чату и базе знаний."
+        ],
+        actions: [
+          "Проверить полный набор пунктов меню.",
+          "Открыть `Шаблоны` и `+ Создать шаблон`.",
+          "Открыть `База знаний` и `+ Загрузить документ`.",
+          "Проверить `AI Чатбот`."
+        ]
+      },
+      newcomer: {
+        name: "Новичок",
+        desc: "Ключевая роль для проверки персонализированного пользовательского сценария.",
+        points: [
+          "Видит только свой onboarding и свои задачи.",
+          "Имеет доступ к AI-помощнику.",
+          "Может быстро понять next steps без перегруза.",
+          "Получает персональный пользовательский сценарий."
+        ],
+        actions: [
+          "Проверить, как сузилось меню.",
+          "Открыть `Мои задачи`.",
+          "Перейти в `AI Помощник` и спросить `Что мне делать?`.",
+          "Проверить, что доступен только персональный сценарий."
+        ]
+      },
+      manager: {
+        name: "Руководитель",
+        desc: "Подходит для проверки того, что система не раскрывает лишние данные и даёт только обзор по своему отделу.",
+        points: [
+          "Видит онбординги и задачи своего отдела.",
+          "Не имеет чата в текущей модели.",
+          "Получает управленческий обзор без лишнего шума.",
+          "Хорошо подходит для проверки backend-фильтрации по роли."
+        ],
+        actions: [
+          "Сравнить меню с HR.",
+          "Открыть `Онбординги` или `Задачи отдела`.",
+          "Проверить ограничение доступа.",
+          "Зафиксировать, что фильтрация делается на backend."
+        ]
+      },
+      it: {
+        name: "IT",
+        desc: "Подходит для проверки узкого рабочего интерфейса: только задачи и база знаний.",
+        points: [
+          "Видит только свои задачи.",
+          "Имеет доступ к базе знаний.",
+          "Интерфейс максимально сфокусирован.",
+          "Показывает, что продукт не перегружает пользователя."
+        ],
+        actions: [
+          "Открыть `Доска задач`.",
+          "Проверить отсутствие лишних разделов.",
+          "Зайти в `База знаний` и найти инструкцию по доступам.",
+          "Проверить фокус на рабочих сценариях."
+        ]
+      },
+      mentor: {
+        name: "Наставник",
+        desc: "Профиль для проверки сценария сопровождения подопечных и работы по их маршруту.",
+        points: [
+          "Видит задачи и подопечных.",
+          "Может смотреть связанные онбординги.",
+          "Помогает новичку пройти маршрут без блокеров.",
+          "Показывает персонализированный сценарий работы."
+        ],
+        actions: [
+          "Открыть `Онбординги` или `Доска задач`.",
+          "Проверить, что у наставника свой фокус в процессе.",
+          "Сравнить с HR и Новичком.",
+          "Проверить многоуровневую модель участия."
+        ]
+      }
+    };
+
+    const checklistKey = "testing-guide-checklist";
+    const routePanel = document.getElementById("routePanel");
+    const routeTabs = document.getElementById("routeTabs");
+    const roleTabs = document.getElementById("roleTabs");
+
+    function renderRoute(type) {
+      routePanel.innerHTML = routeData[type].map((item, index) => `
+        <article class="route-card card">
+          <div class="route-number">${index + 1}</div>
+          <div>
+            <h3>${item.title}</h3>
+            <p class="body">${item.text}</p>
+            <div class="route-meta">${item.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderRole(role) {
+      const data = roleData[role];
+      document.getElementById("roleName").textContent = data.name;
+      document.getElementById("roleDesc").textContent = data.desc;
+      document.getElementById("rolePoints").innerHTML = data.points
+        .map((item) => `<div class="role-point">${item}</div>`)
+        .join("");
+      document.getElementById("roleActions").innerHTML = data.actions
+        .map((item) => `<div class="role-point">${item}</div>`)
+        .join("");
+    }
+
+    routeTabs.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-route]");
+      if (!button) return;
+      routeTabs.querySelectorAll("button").forEach((node) => node.classList.remove("active"));
+      button.classList.add("active");
+      renderRoute(button.dataset.route);
+    });
+
+    roleTabs.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-role]");
+      if (!button) return;
+      roleTabs.querySelectorAll("button").forEach((node) => node.classList.remove("active"));
+      button.classList.add("active");
+      renderRole(button.dataset.role);
+    });
+
+    async function copyText(value, button) {
+      try {
+        await navigator.clipboard.writeText(value);
+        const previous = button.textContent;
+        button.textContent = "Скопировано";
+        setTimeout(() => {
+          button.textContent = previous;
+        }, 1200);
+      } catch {
+        const previous = button.textContent;
+        button.textContent = "Не удалось скопировать";
+        setTimeout(() => {
+          button.textContent = previous;
+        }, 1400);
+      }
+    }
+
+    document.querySelectorAll(".copy-btn").forEach((button) => {
+      button.addEventListener("click", () => copyText(button.dataset.copy, button));
+    });
+
+    function loadChecklist() {
+      try {
+        return JSON.parse(localStorage.getItem(checklistKey) || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function saveChecklist(data) {
+      localStorage.setItem(checklistKey, JSON.stringify(data));
+    }
+
+    function updateChecklistUI() {
+      const state = loadChecklist();
+      const inputs = [...document.querySelectorAll("#checklist input[type='checkbox']")];
+      let done = 0;
+
+      inputs.forEach((input) => {
+        const checked = Boolean(state[input.dataset.id]);
+        input.checked = checked;
+        input.closest(".check-item").classList.toggle("done", checked);
+        if (checked) done += 1;
+      });
+
+      const total = inputs.length;
+      document.getElementById("progressText").textContent = `${done} из ${total} шагов выполнено`;
+      document.getElementById("progressFill").style.width = `${(done / total) * 100}%`;
+    }
+
+    document.getElementById("checklist").addEventListener("change", (event) => {
+      const input = event.target.closest("input[type='checkbox']");
+      if (!input) return;
+      const state = loadChecklist();
+      state[input.dataset.id] = input.checked;
+      saveChecklist(state);
+      updateChecklistUI();
+    });
+
+    const revealNodes = [...document.querySelectorAll(".reveal")];
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, { threshold: 0.16 });
+
+    revealNodes.forEach((node, index) => {
+      if (index === 0) return;
+      observer.observe(node);
+    });
+
+    renderRoute("fast");
+    renderRole("hr");
+    updateChecklistUI();
+  </script>
+</body>
+</html>
