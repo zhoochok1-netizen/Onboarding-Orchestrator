@@ -2,7 +2,6 @@ services:
   - type: web
     name: onboarding-backend
     runtime: docker
-    plan: free
     rootDir: backend
     dockerfilePath: ./Dockerfile
     envVars:
@@ -16,7 +15,6 @@ services:
   - type: web
     name: onboarding-frontend
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: build
