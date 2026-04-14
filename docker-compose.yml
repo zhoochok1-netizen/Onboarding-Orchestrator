@@ -1,27 +1,42 @@
-version: "3.9"
-
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: onboarding-backend
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
     env_file:
       - .env
     environment:
-      - GATEWAY_TOKEN=${GATEWAY_TOKEN:-}
-      - GATEWAY_BASE_URL=${GATEWAY_BASE_URL:-https://openrouter.ai/api/v1}
-      - GATEWAY_MODEL=${GATEWAY_MODEL:-google/gemini-2.5-flash}
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN}
+      GATEWAY_BASE_URL: ${GATEWAY_BASE_URL:-https://openrouter.ai/api/v1}
+      GATEWAY_MODEL: ${GATEWAY_MODEL:-google/gemini-2.5-flash}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    restart: unless-stopped
+    networks:
+      - app-network
 
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
-        REACT_APP_API_URL: ""
+        BASE_PATH: ${BASE_PATH:-/}
     container_name: onboarding-frontend
-    restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${PORT:-3000}:80"
+    environment:
+      BASE_PATH: ${BASE_PATH:-/}
+    volumes:
+      - ./frontend/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend/nginx/generate-conf.sh:/docker-entrypoint.d/generate-conf.sh:ro
+    command: ["/bin/sh", "/docker-entrypoint.d/generate-conf.sh"]
+    restart: unless-stopped
     depends_on:
       - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
